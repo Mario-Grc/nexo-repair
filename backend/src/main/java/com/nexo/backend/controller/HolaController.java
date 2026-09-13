@@ -1,4 +1,4 @@
-package com.nexo.backend;
+package com.nexo.backend.controller;
 
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
