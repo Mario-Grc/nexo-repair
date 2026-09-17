@@ -10,7 +10,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-// TODO Fase 3: sustituir por reglas por rol (TECNICO/RECEPCION/ADMIN) + JWT
+// TODO: sustituir por reglas por rol (TECNICO/RECEPCION/ADMIN) + JWT
 @Configuration
 public class SecurityConfig {
 
