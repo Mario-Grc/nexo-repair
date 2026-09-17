@@ -1,0 +1,27 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <div>
+    <label for="name">Name:</label>
+    <input id="name" type="text" formControlName="name" />
+    
+    @if (form.controls.name.touched && form.controls.name.invalid) {
+      <p class="error">The name is required.</p>
+    }
+  </div>
+
+  <div>
+    <label for="contact">Contact:</label>
+    <input id="contact" type="text" formControlName="contact" />
+
+    @if (form.controls.contact.touched && form.controls.contact.invalid) {
+      <p class="error">The contact is required.</p>
+    }
+  </div>
+
+  <button type="submit" [disabled]="form.invalid || isSubmitting()">
+    @if (isSubmitting()) {
+      Saving...
+    } @else {
+      Create Customer
+    }
+  </button>
+</form>

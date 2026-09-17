@@ -1,0 +1,30 @@
+<h2>Customers</h2>
+
+<app-customer-form (created)='customersResource.reload()' />
+
+@if (customersResource.isLoading()) {
+  <p>Loading customers...</p>
+} @else if (customersResource.value(); as customers) {
+  @if (customers.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Name</th>
+          <th>Contact</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (c of customers; track c.id) {
+          <tr>
+            <td>{{ c.id }}</td>
+            <td>{{ c.name }}</td>
+            <td>{{ c.contact }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else {
+    <p>There are no customers.</p>
+  }
+}
