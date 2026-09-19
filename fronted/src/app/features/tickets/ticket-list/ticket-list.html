@@ -1,0 +1,36 @@
+<h2>Tickets</h2>
+
+@if (ticketsResource.isLoading()) {
+  <p>Loading tickets...</p>
+} @else if (ticketsResource.value(); as tickets) {
+  @if (tickets.length > 0) {
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Description</th>
+          <th>Device</th>
+          <th>Status</th>
+          <th>Customer</th>
+          <th>Employee</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (ticket of tickets; track ticket.id) {
+          <tr>
+            <td>{{ ticket.id }}</td>
+            <td>{{ ticket.description }}</td>
+            <td>{{ ticket.deviceInfo }}</td>
+            <td>{{ ticket.status }}</td>
+            <td>{{ ticket.customerId }}</td>
+            <td>{{ ticket.employeeId ?? 'Unassigned' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  } @else {
+    <p>There are no tickets.</p>
+  }
+} @else {
+  <p>Could not load tickets.</p>
+}

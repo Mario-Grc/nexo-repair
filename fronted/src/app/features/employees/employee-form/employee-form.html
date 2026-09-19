@@ -1,0 +1,7 @@
+<form [formGroup]="form" (ngSubmit)="onSubmit()">
+  <label for="employee-name">Name:</label>
+  <input id="employee-name" type="text" formControlName="name" />
+  <button type="submit" [disabled]="form.invalid || isSubmitting()">
+    {{ isSubmitting() ? 'Saving...' : 'Create employee' }}
+  </button>
+</form>

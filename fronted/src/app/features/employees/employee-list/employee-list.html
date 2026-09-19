@@ -1,0 +1,19 @@
+<h2>Employees</h2>
+
+<app-employee-form (created)="employeesResource.reload()" />
+
+@if (employeesResource.isLoading()) {
+  <p>Loading employees...</p>
+} @else if (employeesResource.value(); as employees) {
+  @if (employees.length > 0) {
+    <ul>
+      @for (employee of employees; track employee.id) {
+        <li>{{ employee.id }} - {{ employee.name }}</li>
+      }
+    </ul>
+  } @else {
+    <p>There are no employees.</p>
+  }
+} @else {
+  <p>Could not load employees.</p>
+}
