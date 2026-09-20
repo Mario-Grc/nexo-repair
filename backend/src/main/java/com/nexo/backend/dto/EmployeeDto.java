@@ -1,4 +1,5 @@
 package com.nexo.backend.dto;
 
-public record EmployeeDto(Long id, String name) {
-}
+import com.nexo.backend.model.EmployeeRole;
+
+public record EmployeeDto(Long id, String name, String email, EmployeeRole role, boolean active) {}

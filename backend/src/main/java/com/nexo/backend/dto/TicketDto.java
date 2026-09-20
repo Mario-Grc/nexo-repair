@@ -2,11 +2,15 @@ package com.nexo.backend.dto;
 
 import com.nexo.backend.model.TicketStatus;
 
+import java.time.Instant;
+import java.util.UUID;
+
 public record TicketDto(
-        Long id,
-        String description,
-        String deviceInfo,
+        UUID publicId,
+        String problemDescription,
+        DeviceDto device,
         TicketStatus status,
         Long customerId,
-        Long employeeId
+        Long assignedEmployeeId,
+        Instant createdAt
 ) {}

@@ -5,5 +5,6 @@ public enum TicketStatus {
     IN_PROGRESS,
     WAITING_FOR_PARTS,
     COMPLETED,
-    DELIVERED
+    DELIVERED,
+    CANCELLED,
 }

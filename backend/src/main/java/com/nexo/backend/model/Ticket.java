@@ -1,18 +1,29 @@
 package com.nexo.backend.model;
 
 import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "tickets")
+@EntityListeners(AuditingEntityListener.class)
 public class Ticket {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String description;
+    @Column(nullable = false, unique = true, updatable = false)
+    private UUID publicId = UUID.randomUUID();
 
-    private String deviceInfo;
+    @Column(nullable = false)
+    private String problemDescription;
+
+    @Embedded
+    private DeviceInfo device;
 
     @Enumerated(EnumType.STRING)
     private TicketStatus status = TicketStatus.PENDING;
@@ -23,21 +34,27 @@ public class Ticket {
 
     @ManyToOne
     @JoinColumn(name = "employee_id")
-    private Employee employee;
+    private Employee assignedEmployee;
+
+    @CreatedDate
+    @Column(nullable = false, updatable = false)
+    private Instant createdAt;
 
     public Ticket() {
     }
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-    public String getDeviceInfo() { return deviceInfo; }
-    public void setDeviceInfo(String deviceInfo) { this.deviceInfo = deviceInfo; }
+    public UUID getPublicId() { return publicId; }
+    public String getProblemDescription() { return problemDescription; }
+    public void setProblemDescription(String problemDescription) { this.problemDescription = problemDescription; }
+    public DeviceInfo getDevice() { return device; }
+    public void setDevice(DeviceInfo device) { this.device = device; }
     public TicketStatus getStatus() { return status; }
     public void setStatus(TicketStatus status) { this.status = status; }
     public Customer getCustomer() { return customer; }
     public void setCustomer(Customer customer) { this.customer = customer; }
-    public Employee getEmployee() { return employee; }
-    public void setEmployee(Employee employee) { this.employee = employee; }
+    public Employee getAssignedEmployee() { return assignedEmployee; }
+    public void setAssignedEmployee(Employee assignedEmployee) { this.assignedEmployee = assignedEmployee; }
+    public Instant getCreatedAt() { return createdAt; }
 }

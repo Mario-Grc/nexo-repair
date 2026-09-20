@@ -1,5 +1,6 @@
 package com.nexo.backend.controller;
 
+import com.nexo.backend.dto.CreateEmployeeDto;
 import com.nexo.backend.dto.EmployeeDto;
 import com.nexo.backend.service.EmployeeService;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +22,7 @@ public class EmployeeControler {
     }
 
     @PostMapping
-    public EmployeeDto createEmployee(@RequestBody EmployeeDto employeeDto) {
-        return employeeService.createEmployee(employeeDto);
+    public EmployeeDto createEmployee(@RequestBody CreateEmployeeDto createEmployeeDto) {
+        return employeeService.createEmployee(createEmployeeDto);
     }
 }

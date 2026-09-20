@@ -5,6 +5,7 @@ import com.nexo.backend.service.TicketService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/tickets")
@@ -21,18 +22,33 @@ public class TicketController {
         return ticketService.getAllTickets();
     }
 
+    @GetMapping("/{publicId}")
+    public TicketDto getTicket(@PathVariable UUID publicId) {
+        return ticketService.getTicket(publicId);
+    }
+
     @PostMapping
     public TicketDto createTicket(@RequestBody CreateTicketDto dto) {
         return ticketService.createTicket(dto);
     }
 
-    @PatchMapping("/{id}/assign")
-    public TicketDto assignEmployee(@PathVariable Long id, @RequestBody AssignEmployeeDto dto) {
-        return ticketService.assignEmployee(id, dto.employeeId());
+    @PatchMapping("/{publicId}/assign")
+    public TicketDto assignEmployee(@PathVariable UUID publicId, @RequestBody AssignEmployeeDto dto) {
+        return ticketService.assignEmployee(publicId, dto.employeeId());
     }
 
-    @PatchMapping("/{id}/status")
-    public TicketDto changeStatus(@PathVariable Long id, @RequestBody ChangeStatusDto dto) {
-        return ticketService.changeStatus(id, dto.newStatus());
+    @PatchMapping("/{publicId}/status")
+    public TicketDto changeStatus(@PathVariable UUID publicId, @RequestBody ChangeStatusDto dto) {
+        return ticketService.changeStatus(publicId, dto.newStatus(), dto.changedByEmployeeId(), dto.note());
+    }
+
+    @PostMapping("/{publicId}/notes")
+    public void addNote(@PathVariable UUID publicId, @RequestBody AddNoteDto dto) {
+        ticketService.addNote(publicId, dto.authorEmployeeId(), dto.text());
+    }
+
+    @GetMapping("/{publicId}/timeline")
+    public List<TimelineEntryDto> getTimeline(@PathVariable UUID publicId) {
+        return ticketService.getTimeline(publicId);
     }
 }
