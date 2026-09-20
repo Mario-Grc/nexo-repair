@@ -1,5 +1,7 @@
 <h2>Customers</h2>
 
+<p-button label="Probar" />
+
 <app-customer-form (created)='customersResource.reload()' />
 
 @if (customersResource.isLoading()) {
