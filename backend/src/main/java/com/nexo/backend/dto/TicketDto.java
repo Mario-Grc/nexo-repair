@@ -11,6 +11,8 @@ public record TicketDto(
         DeviceDto device,
         TicketStatus status,
         Long customerId,
+        String customerName,
         Long assignedEmployeeId,
+        String assignedEmployeeName,
         Instant createdAt
 ) {}

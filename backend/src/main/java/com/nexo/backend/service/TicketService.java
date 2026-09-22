@@ -7,7 +7,6 @@ import com.nexo.backend.model.*;
 import com.nexo.backend.repository.*;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
 import java.util.*;
 
 @Service
@@ -142,7 +141,9 @@ public class TicketService {
                 toDeviceDto(ticket.getDevice()),
                 ticket.getStatus(),
                 ticket.getCustomer().getId(),
+                ticket.getCustomer().getName(),
                 ticket.getAssignedEmployee() != null ? ticket.getAssignedEmployee().getId() : null,
+                ticket.getAssignedEmployee() != null ? ticket.getAssignedEmployee().getName() : null,
                 ticket.getCreatedAt()
         );
     }

@@ -1,5 +1,6 @@
 package com.nexo.backend.model;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -15,14 +16,21 @@ public class Customer {
 
     private String name;
 
-    private String contact;
+    private String email;
+
+    private String phone;
+
+    @Column(columnDefinition = "TEXT")
+    private String notes;
 
     public Customer() {
     }
 
-    public Customer(String name, String contact) {
+    public Customer(String name, String email, String phone, String notes) {
         this.name = name;
-        this.contact = contact;
+        this.email = email;
+        this.phone = phone;
+        this.notes = notes;
     }
 
     public Long getId() {
@@ -41,11 +49,27 @@ public class Customer {
         this.name = name;
     }
     
-    public String getContact() {
-        return contact;
+    public String getEmail() {
+        return email;
     }
 
-    public void setContact(String contact) {
-        this.contact = contact;
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public String getNotes() {
+        return notes;
+    }
+
+    public void setNotes(String notes) {
+        this.notes = notes;
     }
 }

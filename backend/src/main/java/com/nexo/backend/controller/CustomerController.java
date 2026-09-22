@@ -1,5 +1,6 @@
 package com.nexo.backend.controller;
 
+import com.nexo.backend.dto.CreateCustomerDto;
 import com.nexo.backend.dto.CustomerDto;
 import com.nexo.backend.service.CustomerService;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +22,7 @@ public class CustomerController {
     }
 
     @PostMapping
-    public CustomerDto createCustomer(@RequestBody CustomerDto customerDto) {
+    public CustomerDto createCustomer(@RequestBody CreateCustomerDto customerDto) {
         return customerService.createCustomer(customerDto);
     }
 }

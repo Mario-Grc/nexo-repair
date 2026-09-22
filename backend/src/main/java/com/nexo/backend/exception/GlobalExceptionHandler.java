@@ -17,4 +17,9 @@ public class GlobalExceptionHandler {
     public ResponseEntity<String> handleInvalidTransition(InvalidStatusTransitionException ex) {
         return ResponseEntity.badRequest().body(ex.getMessage());
     }
+
+    @ExceptionHandler(InvalidCustomerDataException.class)
+    public ResponseEntity<String> handleInvalidCustomerData(InvalidCustomerDataException ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
+    }
 }
