@@ -1,19 +1,22 @@
 import { Routes } from '@angular/router';
-import { CustomerList } from './features/customers/customer-list/customer-list';
 import { EmployeeList } from './features/employees/employee-list/employee-list';
 import { TicketList } from './features/tickets/ticket-list/ticket-list';
+import { CustomerList } from './features/customers/customer-list/customer-list';
+import { employeeSessionGuard } from './core/guards/employee-session.guard';
+import { AppShellComponent } from './layout/app-shell.component';
+import { SelectEmployeeComponent } from './features/auth/select-employee.component';
 
 export const routes: Routes = [
+    { path: 'select-employee', component: SelectEmployeeComponent },
     {
-        path: 'customers',
-        component: CustomerList,
-    },
-    {
-        path: 'employees',
-        component: EmployeeList,
-    },
-    {
-        path: 'tickets',
-        component: TicketList,
+        path: '',
+        component: AppShellComponent,
+        canActivate: [employeeSessionGuard],
+        children: [
+            { path: 'tickets', component: TicketList },
+            { path: 'customers', component: CustomerList },
+            { path: 'employees', component: EmployeeList },
+            { path: '', redirectTo: 'tickets', pathMatch: 'full' }
+        ]
     }
 ];

@@ -9,12 +9,18 @@
   </div>
 
   <div>
-    <label for="contact">Contact:</label>
-    <input id="contact" type="text" formControlName="contact" />
+    <label for="email">Email:</label>
+    <input id="email" type="email" formControlName="email" />
+  </div>
 
-    @if (form.controls.contact.touched && form.controls.contact.invalid) {
-      <p class="error">The contact is required.</p>
-    }
+  <div>
+    <label for="phone">Phone:</label>
+    <input id="phone" type="text" formControlName="phone" />
+  </div>
+
+  <div>
+    <label for="notes">Notes:</label>
+    <textarea id="notes" formControlName="notes"></textarea>
   </div>
 
   <button type="submit" [disabled]="form.invalid || isSubmitting()">

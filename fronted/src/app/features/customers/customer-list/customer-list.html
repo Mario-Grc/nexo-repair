@@ -1,32 +1,34 @@
-<h2>Customers</h2>
+<div class="page-header">
+  <h1>Customers</h1>
+  <p-button label="New customer" icon="pi pi-plus" (onClick)="openNew()" />
+</div>
 
-<p-button label="Probar" />
+<p-table [value]="customers()" [paginator]="true" [rows]="10">
+  <ng-template #header>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Phone</th>
+    </tr>
+  </ng-template>
+  <ng-template #body let-customer>
+    <tr>
+      <td>{{ customer.name }}</td>
+      <td>{{ customer.email || '-' }}</td>
+      <td>{{ customer.phone || '-' }}</td>
+    </tr>
+  </ng-template>
+</p-table>
 
-<app-customer-form (created)='customersResource.reload()' />
-
-@if (customersResource.isLoading()) {
-  <p>Loading customers...</p>
-} @else if (customersResource.value(); as customers) {
-  @if (customers.length > 0) {
-    <table>
-      <thead>
-        <tr>
-          <th>ID</th>
-          <th>Name</th>
-          <th>Contact</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (c of customers; track c.id) {
-          <tr>
-            <td>{{ c.id }}</td>
-            <td>{{ c.name }}</td>
-            <td>{{ c.contact }}</td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  } @else {
-    <p>There are no customers.</p>
-  }
-}
+<p-dialog header="New customer" [(visible)]="dialogVisible" [modal]="true" [style]="{ width: '420px' }">
+  <form [formGroup]="form" (ngSubmit)="save()" class="dialog-form">
+    <label><span>Name <span class="required-marker" aria-hidden="true">*</span></span><input pInputText formControlName="name" required /></label>
+    <label>Email<input pInputText formControlName="email" /></label>
+    <label>Phone<input pInputText formControlName="phone" /></label>
+    @if (form.hasError('contactRequired') && (form.controls.email.touched || form.controls.phone.touched)) {
+      <p class="error" role="alert">Provide at least an email or a phone number.</p>
+    }
+    <label>Notes<textarea pTextarea formControlName="notes" rows="3"></textarea></label>
+    <p-button type="submit" label="Save" [disabled]="form.invalid" />
+  </form>
+</p-dialog>

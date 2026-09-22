@@ -1,0 +1,19 @@
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">Nexo</div>
+    <nav>
+      <a routerLink="/tickets" routerLinkActive="active">Tickets</a>
+      <a routerLink="/customers" routerLinkActive="active">Customers</a>
+      @if (isAdmin()) {
+        <a routerLink="/employees" routerLinkActive="active">Employees</a>
+      }
+    </nav>
+    <div class="current-employee">
+      <span>{{ session.current()?.name }}</span>
+      <button type="button" (click)="logout()">Switch</button>
+    </div>
+  </aside>
+  <main>
+    <router-outlet />
+  </main>
+</div>

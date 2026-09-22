@@ -1,8 +1,1 @@
-export interface Ticket {
-  id: number;
-  description: string;
-  deviceInfo: string;
-  status: string;
-  customerId: number;
-  employeeId: number | null;
-}
+export type { Device, NewTicket, Ticket } from '../../core/models/ticket';

@@ -1,16 +1,8 @@
-import { HttpClient } from '@angular/common/http';
-import { inject, Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { Ticket } from './ticket.model';
+import { Injectable } from '@angular/core';
+import { TicketService as CoreTicketService } from '../../core/services/ticket.service';
 
 @Injectable({
   providedIn: 'root',
 })
-export class TicketService {
-  private http = inject(HttpClient);
-  private readonly apiUrl = 'http://localhost:8080/api/tickets';
-
-  getTickets(): Observable<Ticket[]> {
-    return this.http.get<Ticket[]>(this.apiUrl);
-  }
+export class TicketService extends CoreTicketService {
 }

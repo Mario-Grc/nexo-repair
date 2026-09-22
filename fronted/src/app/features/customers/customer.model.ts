@@ -1,7 +1,1 @@
-export interface Customer {
-    id: number;
-    name: string;
-    contact: string;
-}
-
-export type NewCustomer = Omit<Customer, 'id'>;
+export type { Customer, NewCustomer } from '../../core/models/customer';

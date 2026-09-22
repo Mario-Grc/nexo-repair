@@ -18,7 +18,9 @@ export class CustomerForm {
 
   form = this.fb.group({
     name: ['', Validators.required],
-    contact: ['', Validators.required],
+    email: [''],
+    phone: [''],
+    notes: [''],
   })
 
   onSubmit() {
