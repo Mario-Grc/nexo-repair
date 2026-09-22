@@ -2,9 +2,9 @@ spring:
   application:
     name: backend
   datasource:
-    url: jdbc:postgresql://localhost:5432/nexo
-    username: nexo
-    password: nexo
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/nexo}
+    username: ${SPRING_DATASOURCE_USERNAME:nexo}
+    password: ${SPRING_DATASOURCE_PASSWORD:nexo}
   jpa:
     hibernate:
       ddl-auto: update
