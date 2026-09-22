@@ -14,7 +14,6 @@
   line-height: 1.2;
   font-weight: 800;
   letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--p-primary-600, #4f46e5);
   padding: 0 0.75rem 0.75rem;
   border-bottom: 1px solid var(--p-content-border-color, #333);
