@@ -9,8 +9,17 @@
       }
     </nav>
     <div class="current-employee">
-      <span>{{ session.current()?.name }}</span>
-      <button type="button" (click)="logout()">Switch</button>
+      <span class="employee-name">{{ session.current()?.name }}</span>
+      <p-button
+        icon="pi pi-sign-out"
+        (onClick)="logout()"
+        [text]="true"
+        [rounded]="true"
+        severity="secondary"
+        size="small"
+        ariaLabel="Switch employee"
+        title="Switch employee"
+      />
     </div>
   </aside>
   <main>

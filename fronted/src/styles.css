@@ -1,5 +1,13 @@
 body { margin: 0; font-family: 'Inter', sans-serif; }
 
+/* Altura mínima común para las filas de datos de todas las tablas.
+   Sin esto, los listados con p-tag (tickets) quedan con filas más altas
+   que los de solo texto (customers). En layout de tabla, height en tr
+   actúa como mínimo: las filas crecen si el contenido lo necesita. */
+.p-datatable-tbody > tr {
+  height: 3.5rem;
+}
+
 /* Shared page header: title left, action right */
 .page-header {
   display: flex;

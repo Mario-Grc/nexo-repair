@@ -1,4 +1,8 @@
-.shell { display: flex; min-height: 100vh; }
+.shell {
+  display: flex;
+  min-height: 100vh;
+}
+
 .sidebar {
   width: 220px;
   flex-shrink: 0;
@@ -7,7 +11,15 @@
   padding: 1.5rem 1rem 1rem;
   border-right: 1px solid var(--p-content-border-color, #333);
 }
-.sidebar nav { display: flex; flex-direction: column; gap: 0.5rem; margin-top: 1rem; flex: 1; }
+
+.sidebar nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex: 1;
+}
+
 .brand {
   margin: 0;
   font-size: 2rem;
@@ -17,7 +29,38 @@
   padding: 0 0.75rem 0.75rem;
   border-bottom: 1px solid var(--p-content-border-color, #333);
 }
-.sidebar nav a { padding: 0.5rem 0.75rem; border-radius: 6px; text-decoration: none; color: inherit; }
-.sidebar nav a.active { background: var(--p-primary-100, #eee); font-weight: 600; }
-.current-employee { display: flex; flex-direction: column; gap: 0.5rem; }
-main { flex: 1; padding: 1.5rem; overflow-x: auto; }
+
+.sidebar nav a {
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  text-decoration: none;
+  color: inherit;
+}
+
+.sidebar nav a.active {
+  background: var(--p-primary-100, #eee);
+  font-weight: 600;
+}
+
+.current-employee {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.5rem;
+  border-top: 1px solid var(--p-content-border-color, #333);
+  padding-top: 0.75rem;
+}
+
+.current-employee .employee-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+main {
+  flex: 1;
+  padding: 1.5rem;
+  overflow-x: auto;
+}
