@@ -10,4 +10,9 @@ public record StatusChangeEntryDto(
         TicketStatus previousStatus,
         TicketStatus newStatus,
         String note
-) implements TimelineEntryDto {}
+) implements TimelineEntryDto {
+    @Override
+    public String type() {
+        return "STATUS_CHANGE";
+    }
+}

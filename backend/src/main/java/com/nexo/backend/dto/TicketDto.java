@@ -3,6 +3,7 @@ package com.nexo.backend.dto;
 import com.nexo.backend.model.TicketStatus;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 public record TicketDto(
@@ -14,5 +15,6 @@ public record TicketDto(
         String customerName,
         Long assignedEmployeeId,
         String assignedEmployeeName,
-        Instant createdAt
+        Instant createdAt,
+        List<TicketStatus> allowedNextStatuses
 ) {}

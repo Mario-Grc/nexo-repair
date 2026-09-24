@@ -2,6 +2,7 @@ package com.nexo.backend.controller;
 
 import com.nexo.backend.dto.CreateEmployeeDto;
 import com.nexo.backend.dto.EmployeeDto;
+import com.nexo.backend.model.EmployeeRole;
 import com.nexo.backend.service.EmployeeService;
 import org.springframework.web.bind.annotation.*;
 
@@ -17,8 +18,9 @@ public class EmployeeControler {
     }
 
     @GetMapping
-    public List<EmployeeDto> getAllEmployees() {
-        return employeeService.getAllEmployees();
+    public List<EmployeeDto> getEmployees(@RequestParam(required = false) EmployeeRole role,
+                                          @RequestParam(required = false) Boolean active) {
+        return employeeService.getEmployees(role, active);
     }
 
     @PostMapping

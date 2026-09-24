@@ -3,6 +3,7 @@ package com.nexo.backend.service;
 import com.nexo.backend.dto.CreateEmployeeDto;
 import com.nexo.backend.dto.EmployeeDto;
 import com.nexo.backend.model.Employee;
+import com.nexo.backend.model.EmployeeRole;
 import com.nexo.backend.repository.EmployeeRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -29,8 +30,11 @@ public class EmployeeService {
         );
     }
 
-    public List<EmployeeDto> getAllEmployees() {
-        return employeeRepository.findAll().stream().map(this::toDto).toList();
+    public List<EmployeeDto> getEmployees(EmployeeRole role, Boolean active) {
+        return employeeRepository.findAll().stream()
+                .filter(e -> role == null || e.getRole() == role)
+                .filter(e -> active == null || e.isActive() == active)
+                .map(this::toDto).toList();
     }
 
     public EmployeeDto createEmployee(CreateEmployeeDto dto) {

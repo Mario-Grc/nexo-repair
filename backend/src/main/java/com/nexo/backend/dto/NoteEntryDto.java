@@ -6,4 +6,9 @@ public record NoteEntryDto(
         Instant occurredAt,
         String authorName,
         String text
-) implements TimelineEntryDto {}
+) implements TimelineEntryDto {
+    @Override
+    public String type() {
+        return "NOTE";
+    }
+}

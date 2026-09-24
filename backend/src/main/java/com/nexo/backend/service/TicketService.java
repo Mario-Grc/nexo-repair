@@ -66,10 +66,13 @@ public class TicketService {
 
     public TicketDto assignEmployee(UUID publicId, Long employeeId) {
         Ticket ticket = findTicketOrThrow(publicId);
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee " + employeeId + " no encontrado"));
-
-        ticket.setAssignedEmployee(employee);
+        if (employeeId == null) {
+            ticket.setAssignedEmployee(null);
+        } else {
+            Employee employee = employeeRepository.findById(employeeId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Employee " + employeeId + " no encontrado"));
+            ticket.setAssignedEmployee(employee);
+        }
         return toDto(ticketRepository.save(ticket));
     }
 
@@ -144,7 +147,8 @@ public class TicketService {
                 ticket.getCustomer().getName(),
                 ticket.getAssignedEmployee() != null ? ticket.getAssignedEmployee().getId() : null,
                 ticket.getAssignedEmployee() != null ? ticket.getAssignedEmployee().getName() : null,
-                ticket.getCreatedAt()
+                ticket.getCreatedAt(),
+                ALLOWED_TRANSITIONS.get(ticket.getStatus()).stream().sorted().toList()
         );
     }
 

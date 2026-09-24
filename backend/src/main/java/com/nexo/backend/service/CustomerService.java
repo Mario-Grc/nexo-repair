@@ -3,6 +3,7 @@ package com.nexo.backend.service;
 import com.nexo.backend.dto.CreateCustomerDto;
 import com.nexo.backend.dto.CustomerDto;
 import com.nexo.backend.exception.InvalidCustomerDataException;
+import com.nexo.backend.exception.ResourceNotFoundException;
 import com.nexo.backend.model.Customer;
 import com.nexo.backend.repository.CustomerRepository;
 import org.springframework.stereotype.Service;
@@ -24,6 +25,12 @@ public class CustomerService {
     public List<CustomerDto> getAllCustomers() {
         return customerRepository.findAll()
                 .stream().map(this::toDto).toList();
+    }
+
+    public CustomerDto getCustomer(Long id) {
+        return customerRepository.findById(id)
+                .map(this::toDto)
+                .orElseThrow(() -> new ResourceNotFoundException("Customer " + id + " not found"));
     }
 
     public CustomerDto createCustomer(CreateCustomerDto customerDto) {
