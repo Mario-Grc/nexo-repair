@@ -1,0 +1,115 @@
+<div class="ticket-detail" [attr.data-status]="ticket()?.status ?? null">
+@if (error()) {
+  <p-message severity="error">{{ error() }}</p-message>
+  <p><a routerLink="/tickets">Back to tickets</a></p>
+} @else if (ticket(); as t) {
+  <div class="detail-header">
+    <a
+      pButton
+      icon="pi pi-arrow-left"
+      routerLink="/tickets"
+      aria-label="Back to tickets"
+      title="Back to tickets"
+      [text]="true"
+      [rounded]="true"
+      severity="secondary"
+      class="back-btn"
+    ></a>
+    <h1>Ticket {{ shortId() }}</h1>
+    <p-tag [value]="statusLabels[t.status]" [severity]="statusSeverity[t.status]" />
+    @if (primaryStatus(); as next) {
+      @if (splitButtonItems().length === 0) {
+        <p-button [label]="'Mark as ' + statusLabels[next]" (onClick)="changeStatus(next)" />
+      } @else {
+        <p-splitButton [label]="'Mark as ' + statusLabels[next]" [model]="splitButtonItems()" (onClick)="changeStatus(next)" />
+      }
+    }
+  </div>
+
+  @if (!isCancelled()) {
+    <p-steps [model]="stepperItems" [activeIndex]="activeIndex()" [readonly]="true" styleClass="detail-stepper" />
+  } @else {
+    <p-message severity="warn">Ticket cancelled.</p-message>
+  }
+
+  <div class="detail-grid">
+    <section class="main-column">
+      <p-card header="Problem">
+        <p>{{ t.problemDescription }}</p>
+      </p-card>
+
+      <p-card header="Add note">
+        <form [formGroup]="noteForm" (ngSubmit)="addNote()" class="note-form">
+          <label>
+            <span class="sr-only">Internal note</span>
+            <textarea pTextarea formControlName="text" rows="3" placeholder="Write an internal note…"></textarea>
+          </label>
+          <p-button type="submit" label="Add note" [disabled]="noteForm.invalid" />
+        </form>
+      </p-card>
+
+      <p-card header="Timeline">
+        @for (entry of timeline(); track $index) {
+          @switch (entry.type) {
+            @case ('STATUS_CHANGE') {
+              <div class="timeline-row is-status">
+                <i class="pi pi-refresh timeline-icon" aria-hidden="true"></i>
+                <div class="timeline-body">
+                  <strong>{{ entry.authorName }}</strong>
+                  <p-tag [value]="statusLabels[entry.newStatus]" [severity]="statusSeverity[entry.newStatus]" />
+                </div>
+                <time>{{ entry.occurredAt | date:'short' }}</time>
+              </div>
+            }
+            @case ('NOTE') {
+              <div class="timeline-row is-note">
+                <i class="pi pi-comment timeline-icon" aria-hidden="true"></i>
+                <div class="timeline-body">
+                  <strong>{{ entry.authorName }}</strong>
+                  <p>{{ entry.text }}</p>
+                </div>
+                <time>{{ entry.occurredAt | date:'short' }}</time>
+              </div>
+            }
+          }
+        } @empty {
+          <p>No entries yet.</p>
+        }
+      </p-card>
+    </section>
+
+    <aside class="side-column">
+      <p-card header="Customer">
+        <p><strong>{{ t.customerName }}</strong></p>
+        <p>{{ customer()?.email || '-' }}</p>
+        <p>{{ customer()?.phone || '-' }}</p>
+      </p-card>
+
+      <p-card header="Device">
+        <p><strong>{{ deviceTypeLabels[t.device.type] }}</strong></p>
+        <p>{{ t.device.brand }} {{ t.device.model }}</p>
+        <p>{{ t.device.identifier || '-' }}</p>
+      </p-card>
+
+      <p-card header="Technician">
+        <label>
+          <span class="sr-only">Assigned technician</span>
+          <p-select
+            [options]="technicianOptions()"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Select a technician"
+            [formControl]="assignControl"
+            (onChange)="onAssign()"
+          />
+        </label>
+        @if (t.assignedEmployeeName) {
+          <p>Assigned to {{ t.assignedEmployeeName }}</p>
+        }
+      </p-card>
+    </aside>
+  </div>
+} @else {
+  <p>Loading ticket…</p>
+}
+</div>

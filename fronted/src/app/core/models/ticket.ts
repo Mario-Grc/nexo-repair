@@ -18,6 +18,7 @@ export interface Ticket {
   assignedEmployeeId: number | null;
   assignedEmployeeName: string | null;
   createdAt: string;
+  allowedNextStatuses: TicketStatus[];
 }
 
 export interface NewTicket {
