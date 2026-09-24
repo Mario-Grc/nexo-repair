@@ -5,12 +5,13 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { SplitButtonModule } from 'primeng/splitbutton';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { StepsModule } from 'primeng/steps';
 import { CardModule } from 'primeng/card';
 import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { MessageModule } from 'primeng/message';
-import { MenuItem } from 'primeng/api';
+import { MenuItem, ConfirmationService } from 'primeng/api';
 import { TicketService } from '../../../core/services/ticket.service';
 import { CustomerService } from '../../../core/services/customer.service';
 import { EmployeeService } from '../../../core/services/employee.service';
@@ -26,11 +27,38 @@ import { DEVICE_TYPE_LABELS } from '../../../core/models/device-type';
 // state machine still allows moving between IN_PROGRESS and WAITING_FOR_PARTS.
 const STEPPER_ORDER: TicketStatus[] = ['PENDING', 'WAITING_FOR_PARTS', 'IN_PROGRESS', 'COMPLETED', 'DELIVERED'];
 
+// One-way transitions: COMPLETED cannot return to IN_PROGRESS, while DELIVERED
+// and CANCELLED are terminal states. Only these statuses require confirmation.
+const CONFIRM_STATUSES: TicketStatus[] = ['COMPLETED', 'DELIVERED', 'CANCELLED'];
+
+const CONFIRM_COPY: Record<TicketStatus, { header: string; message: string; acceptLabel: string; danger?: boolean }> = {
+  PENDING: { header: '', message: '', acceptLabel: '' },
+  IN_PROGRESS: { header: '', message: '', acceptLabel: '' },
+  WAITING_FOR_PARTS: { header: '', message: '', acceptLabel: '' },
+  COMPLETED: {
+    header: 'Mark as Completed?',
+    message: 'Once completed, the ticket can only be delivered. It cannot go back to In progress.',
+    acceptLabel: 'Mark completed',
+  },
+  DELIVERED: {
+    header: 'Mark as Delivered?',
+    message: 'This closes the ticket permanently. Continue?',
+    acceptLabel: 'Mark delivered',
+  },
+  CANCELLED: {
+    header: 'Cancel ticket?',
+    message: 'The ticket will be removed from the flow permanently. Continue?',
+    acceptLabel: 'Cancel ticket',
+    danger: true,
+  },
+};
+
 @Component({
   selector: 'app-ticket-detail',
-  imports: [RouterLink, DatePipe, ReactiveFormsModule, TagModule, ButtonModule, SplitButtonModule, StepsModule, CardModule, SelectModule, TextareaModule, MessageModule],
+  imports: [RouterLink, DatePipe, ReactiveFormsModule, TagModule, ButtonModule, SplitButtonModule, ConfirmDialogModule, StepsModule, CardModule, SelectModule, TextareaModule, MessageModule],
   templateUrl: './ticket-detail.html',
   styleUrl: './ticket-detail.css',
+  providers: [ConfirmationService],
   // Required to theme PrimeNG internals; CSS rules are scoped under .ticket-detail.
   encapsulation: ViewEncapsulation.None,
 })
@@ -40,6 +68,7 @@ export class TicketDetail implements OnInit {
   private customerService = inject(CustomerService);
   private employeeService = inject(EmployeeService);
   private session = inject(EmployeeSessionService);
+  private confirm = inject(ConfirmationService);
   private fb = inject(FormBuilder);
 
   private publicId = '';
@@ -49,6 +78,8 @@ export class TicketDetail implements OnInit {
   customer = signal<Customer | null>(null);
   technicians = signal<Employee[]>([]);
   error = signal<string | null>(null);
+  // The technician selection is staged and saved only when Save is clicked.
+  assignDirty = signal(false);
 
   statusLabels = TICKET_STATUS_LABELS;
   statusSeverity = TICKET_STATUS_SEVERITY;
@@ -75,7 +106,7 @@ export class TicketDetail implements OnInit {
   ]);
 
   noteForm = this.fb.nonNullable.group({
-    text: ['', Validators.required],
+    text: ['', [Validators.required, Validators.maxLength(500)]],
   });
 
   assignControl = this.fb.control<number | null>(null);
@@ -97,6 +128,7 @@ export class TicketDetail implements OnInit {
       next: ticket => {
         this.ticket.set(ticket);
         this.assignControl.setValue(ticket.assignedEmployeeId ?? null, { emitEvent: false });
+        this.assignDirty.set(false);
         this.loadCustomer(ticket.customerId);
       },
       error: () => this.error.set('Ticket not found.'),
@@ -112,6 +144,23 @@ export class TicketDetail implements OnInit {
   }
 
   changeStatus(status: TicketStatus): void {
+    if (CONFIRM_STATUSES.includes(status)) {
+      const copy = CONFIRM_COPY[status];
+      this.confirm.confirm({
+        header: copy.header,
+        message: copy.message,
+        icon: 'pi pi-exclamation-triangle',
+        acceptLabel: copy.acceptLabel,
+        acceptButtonStyleClass: copy.danger ? 'p-button-danger' : undefined,
+        rejectButtonStyleClass: 'p-button-text',
+        accept: () => this.doChangeStatus(status),
+      });
+      return;
+    }
+    this.doChangeStatus(status);
+  }
+
+  private doChangeStatus(status: TicketStatus): void {
     const employee = this.session.current();
     const ticket = this.ticket();
     if (!employee || !ticket) return;
@@ -123,10 +172,22 @@ export class TicketDetail implements OnInit {
       });
   }
 
+  onAssignStaged(): void {
+    const ticket = this.ticket();
+    this.assignDirty.set(ticket != null && (ticket.assignedEmployeeId ?? null) !== (this.assignControl.value ?? null));
+  }
+
   onAssign(): void {
-    this.ticketService.assignEmployee(this.publicId, this.assignControl.value ?? null).subscribe(updated => {
+    const employee = this.session.current();
+    if (!employee) return;
+    this.ticketService.assignEmployee(this.publicId, {
+      employeeId: this.assignControl.value ?? null,
+      assignedByEmployeeId: employee.id,
+    }).subscribe(updated => {
       this.ticket.set(updated);
       this.assignControl.setValue(updated.assignedEmployeeId ?? null, { emitEvent: false });
+      this.assignDirty.set(false);
+      this.loadTimeline();
     });
   }
 

@@ -111,6 +111,12 @@
   width: 100%;
 }
 
+.ticket-detail .assign-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
 .ticket-detail .timeline-row {
   display: flex;
   align-items: flex-start;

@@ -43,7 +43,7 @@
 
     <label>
       <span>Problem description <span class="required-marker" aria-hidden="true">*</span></span>
-      <textarea pTextarea formControlName="problemDescription" rows="3" required></textarea>
+      <textarea pTextarea formControlName="problemDescription" rows="3" required maxlength="500"></textarea>
     </label>
 
     <p-button type="submit" label="Create ticket" [disabled]="form.invalid" />

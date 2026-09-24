@@ -19,7 +19,7 @@ public class Ticket {
     @Column(nullable = false, unique = true, updatable = false)
     private UUID publicId = UUID.randomUUID();
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String problemDescription;
 
     @Embedded

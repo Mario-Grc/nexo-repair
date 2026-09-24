@@ -26,17 +26,20 @@ public class TicketService {
     private final EmployeeRepository employeeRepository;
     private final TicketStatusChangeRepository statusChangeRepository;
     private final TicketNoteRepository noteRepository;
+    private final TicketAssignmentChangeRepository assignmentChangeRepository;
 
     public TicketService(TicketRepository ticketRepository,
                          CustomerRepository customerRepository,
                          EmployeeRepository employeeRepository,
                          TicketStatusChangeRepository statusChangeRepository,
-                         TicketNoteRepository noteRepository) {
+                         TicketNoteRepository noteRepository,
+                         TicketAssignmentChangeRepository assignmentChangeRepository) {
         this.ticketRepository = ticketRepository;
         this.customerRepository = customerRepository;
         this.employeeRepository = employeeRepository;
         this.statusChangeRepository = statusChangeRepository;
         this.noteRepository = noteRepository;
+        this.assignmentChangeRepository = assignmentChangeRepository;
     }
 
     public List<TicketDto> getAllTickets() {
@@ -64,16 +67,26 @@ public class TicketService {
         return toDto(ticket);
     }
 
-    public TicketDto assignEmployee(UUID publicId, Long employeeId) {
+    public TicketDto assignEmployee(UUID publicId, Long employeeId, Long assignedByEmployeeId) {
         Ticket ticket = findTicketOrThrow(publicId);
-        if (employeeId == null) {
-            ticket.setAssignedEmployee(null);
-        } else {
-            Employee employee = employeeRepository.findById(employeeId)
+        Employee assignedBy = employeeRepository.findById(assignedByEmployeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee " + assignedByEmployeeId + " no encontrado"));
+
+        Employee previous = ticket.getAssignedEmployee();
+        Employee next = null;
+        if (employeeId != null) {
+            next = employeeRepository.findById(employeeId)
                     .orElseThrow(() -> new ResourceNotFoundException("Employee " + employeeId + " no encontrado"));
-            ticket.setAssignedEmployee(employee);
         }
-        return toDto(ticketRepository.save(ticket));
+        ticket.setAssignedEmployee(next);
+        TicketDto dto = toDto(ticketRepository.save(ticket));
+
+        Long previousId = previous != null ? previous.getId() : null;
+        Long nextId = next != null ? next.getId() : null;
+        if (!Objects.equals(previousId, nextId)) {
+            recordAssignmentChange(ticket, previous, next, assignedBy);
+        }
+        return dto;
     }
 
     public TicketDto changeStatus(UUID publicId, TicketStatus newStatus, Long changedByEmployeeId, String note) {
@@ -117,6 +130,11 @@ public class TicketService {
                         c.getPreviousStatus(), c.getNewStatus(), c.getNote())));
         noteRepository.findByTicketOrderByCreatedAtAsc(ticket).forEach(n ->
                 entries.add(new NoteEntryDto(n.getCreatedAt(), n.getAuthor().getName(), n.getText())));
+        assignmentChangeRepository.findByTicketOrderByChangedAtAsc(ticket).forEach(c ->
+                entries.add(new AssignmentChangeEntryDto(
+                        c.getChangedAt(), c.getChangedBy().getName(),
+                        c.getPreviousEmployee() != null ? c.getPreviousEmployee().getName() : null,
+                        c.getNewEmployee() != null ? c.getNewEmployee().getName() : null)));
 
         entries.sort(Comparator.comparing(TimelineEntryDto::occurredAt));
         return entries;
@@ -130,6 +148,15 @@ public class TicketService {
         change.setChangedBy(changedBy);
         change.setNote(note);
         statusChangeRepository.save(change);
+    }
+
+    private void recordAssignmentChange(Ticket ticket, Employee previous, Employee next, Employee changedBy) {
+        TicketAssignmentChange change = new TicketAssignmentChange();
+        change.setTicket(ticket);
+        change.setPreviousEmployee(previous);
+        change.setNewEmployee(next);
+        change.setChangedBy(changedBy);
+        assignmentChangeRepository.save(change);
     }
 
     private Ticket findTicketOrThrow(UUID publicId) {

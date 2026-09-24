@@ -34,7 +34,7 @@ public class TicketController {
 
     @PatchMapping("/{publicId}/assign")
     public TicketDto assignEmployee(@PathVariable UUID publicId, @RequestBody AssignEmployeeDto dto) {
-        return ticketService.assignEmployee(publicId, dto.employeeId());
+        return ticketService.assignEmployee(publicId, dto.employeeId(), dto.assignedByEmployeeId());
     }
 
     @PatchMapping("/{publicId}/status")

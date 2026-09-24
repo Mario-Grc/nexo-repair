@@ -1,4 +1,5 @@
 <div class="ticket-detail" [attr.data-status]="ticket()?.status ?? null">
+<p-confirmDialog />
 @if (error()) {
   <p-message severity="error">{{ error() }}</p-message>
   <p><a routerLink="/tickets">Back to tickets</a></p>
@@ -42,7 +43,7 @@
         <form [formGroup]="noteForm" (ngSubmit)="addNote()" class="note-form">
           <label>
             <span class="sr-only">Internal note</span>
-            <textarea pTextarea formControlName="text" rows="3" placeholder="Write an internal note…"></textarea>
+            <textarea pTextarea formControlName="text" rows="3" maxlength="500" placeholder="Write an internal note…"></textarea>
           </label>
           <p-button type="submit" label="Add note" [disabled]="noteForm.invalid" />
         </form>
@@ -67,6 +68,16 @@
                 <div class="timeline-body">
                   <strong>{{ entry.authorName }}</strong>
                   <p>{{ entry.text }}</p>
+                </div>
+                <time>{{ entry.occurredAt | date:'short' }}</time>
+              </div>
+            }
+            @case ('ASSIGNMENT_CHANGE') {
+              <div class="timeline-row is-status">
+                <i class="pi pi-user timeline-icon" aria-hidden="true"></i>
+                <div class="timeline-body">
+                  <strong>{{ entry.authorName }}</strong>
+                  <span>reassigned from {{ entry.previousEmployeeName ?? 'Unassigned' }} to {{ entry.newEmployeeName ?? 'Unassigned' }}</span>
                 </div>
                 <time>{{ entry.occurredAt | date:'short' }}</time>
               </div>
@@ -100,12 +111,12 @@
             optionValue="value"
             placeholder="Select a technician"
             [formControl]="assignControl"
-            (onChange)="onAssign()"
+            (onChange)="onAssignStaged()"
           />
         </label>
-        @if (t.assignedEmployeeName) {
-          <p>Assigned to {{ t.assignedEmployeeName }}</p>
-        }
+        <div class="assign-actions">
+          <p-button label="Save" size="small" [disabled]="!assignDirty()" (onClick)="onAssign()" />
+        </div>
       </p-card>
     </aside>
   </div>

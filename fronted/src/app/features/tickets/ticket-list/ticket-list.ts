@@ -39,7 +39,7 @@ export class TicketList implements OnInit {
 
   form = this.fb.nonNullable.group({
     customerId: this.fb.control<number | null>(null, Validators.required),
-    problemDescription: ['', Validators.required],
+    problemDescription: ['', [Validators.required, Validators.maxLength(500)]],
     device: this.fb.nonNullable.group({
       type: ['OTHER' as const, Validators.required],
       brand: [''],

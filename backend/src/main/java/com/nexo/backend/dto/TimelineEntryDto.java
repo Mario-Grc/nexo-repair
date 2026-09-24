@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.Instant;
 
-public sealed interface TimelineEntryDto permits StatusChangeEntryDto, NoteEntryDto {
+public sealed interface TimelineEntryDto permits StatusChangeEntryDto, NoteEntryDto, AssignmentChangeEntryDto {
     Instant occurredAt();
 
     // Discriminator for the frontend (@switch over entry.type).

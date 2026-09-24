@@ -23,8 +23,8 @@ export class TicketService {
     return this.http.post<Ticket>(this.baseUrl, ticket);
   }
 
-  assignEmployee(publicId: string, employeeId: number | null): Observable<Ticket> {
-    return this.http.patch<Ticket>(`${this.baseUrl}/${publicId}/assign`, { employeeId });
+  assignEmployee(publicId: string, dto: { employeeId: number | null; assignedByEmployeeId: number }): Observable<Ticket> {
+    return this.http.patch<Ticket>(`${this.baseUrl}/${publicId}/assign`, dto);
   }
 
   changeStatus(publicId: string, dto: { newStatus: TicketStatus; changedByEmployeeId: number; note: string | null }): Observable<Ticket> {

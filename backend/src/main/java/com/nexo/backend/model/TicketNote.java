@@ -19,7 +19,7 @@ public class TicketNote {
     @JoinColumn(name = "author_id", nullable = false)
     private Employee author;
 
-    @Column(nullable = false)
+    @Column(nullable = false, length = 500)
     private String text;
 
     @Column(nullable = false)

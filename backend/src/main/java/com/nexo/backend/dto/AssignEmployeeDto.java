@@ -1,4 +1,4 @@
 package com.nexo.backend.dto;
 
-public record AssignEmployeeDto(Long employeeId) {
+public record AssignEmployeeDto(Long employeeId, Long assignedByEmployeeId) {
 }
