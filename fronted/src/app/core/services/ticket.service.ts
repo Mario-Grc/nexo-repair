@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { NewTicket, Ticket } from '../models/ticket';
@@ -11,8 +11,10 @@ export class TicketService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/tickets`;
 
-  getTickets(): Observable<Ticket[]> {
-    return this.http.get<Ticket[]>(this.baseUrl);
+  getTickets(customerId?: number): Observable<Ticket[]> {
+    let params = new HttpParams();
+    if (customerId != null) params = params.set('customerId', customerId);
+    return this.http.get<Ticket[]>(this.baseUrl, { params });
   }
 
   getTicket(publicId: string): Observable<Ticket> {

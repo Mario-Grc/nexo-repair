@@ -1,8 +1,9 @@
 package com.nexo.backend.controller;
 
-import com.nexo.backend.dto.CreateCustomerDto;
+import com.nexo.backend.dto.CustomerRequestDto;
 import com.nexo.backend.dto.CustomerDto;
 import com.nexo.backend.service.CustomerService;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,7 +28,12 @@ public class CustomerController {
     }
 
     @PostMapping
-    public CustomerDto createCustomer(@RequestBody CreateCustomerDto customerDto) {
+    public CustomerDto createCustomer(@Valid @RequestBody CustomerRequestDto customerDto) {
         return customerService.createCustomer(customerDto);
+    }
+
+    @PutMapping("/{id}")
+    public CustomerDto updateCustomer(@PathVariable Long id, @Valid @RequestBody CustomerRequestDto customerDto) {
+        return customerService.updateCustomer(id, customerDto);
     }
 }

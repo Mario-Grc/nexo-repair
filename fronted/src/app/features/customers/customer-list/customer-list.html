@@ -3,7 +3,7 @@
   <p-button label="New customer" icon="pi pi-plus" (onClick)="openNew()" />
 </div>
 
-<p-table [value]="customers()" [paginator]="true" [rows]="10">
+<p-table [value]="customers()" [paginator]="true" [rows]="10" emptyMessage="No customers found.">
   <ng-template #header>
     <tr>
       <th>Name</th>
@@ -12,7 +12,7 @@
     </tr>
   </ng-template>
   <ng-template #body let-customer>
-    <tr>
+    <tr (click)="openDetail(customer)" style="cursor: pointer">
       <td>{{ customer.name }}</td>
       <td>{{ customer.email || '-' }}</td>
       <td>{{ customer.phone || '-' }}</td>
@@ -20,15 +20,9 @@
   </ng-template>
 </p-table>
 
-<p-dialog header="New customer" [(visible)]="dialogVisible" [modal]="true" [style]="{ width: '420px' }">
-  <form [formGroup]="form" (ngSubmit)="save()" class="dialog-form">
-    <label><span>Name <span class="required-marker" aria-hidden="true">*</span></span><input pInputText formControlName="name" required /></label>
-    <label>Email<input pInputText formControlName="email" /></label>
-    <label>Phone<input pInputText formControlName="phone" /></label>
-    @if (form.hasError('contactRequired') && (form.controls.email.touched || form.controls.phone.touched)) {
-      <p class="error" role="alert">Provide at least an email or a phone number.</p>
-    }
-    <label>Notes<textarea pTextarea formControlName="notes" rows="3"></textarea></label>
-    <p-button type="submit" label="Save" [disabled]="form.invalid" />
-  </form>
-</p-dialog>
+<app-customer-form-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [customer]="null"
+  (saved)="loadCustomers()"
+/>

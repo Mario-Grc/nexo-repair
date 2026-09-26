@@ -42,7 +42,10 @@ public class TicketService {
         this.assignmentChangeRepository = assignmentChangeRepository;
     }
 
-    public List<TicketDto> getAllTickets() {
+    public List<TicketDto> getAllTickets(Long customerId) {
+        if (customerId != null) {
+            return ticketRepository.findByCustomerId(customerId).stream().map(this::toDto).toList();
+        }
         return ticketRepository.findAll().stream().map(this::toDto).toList();
     }
 

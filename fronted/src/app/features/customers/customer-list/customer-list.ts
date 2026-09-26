@@ -1,35 +1,23 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { Router } from '@angular/router';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
-import { InputTextModule } from 'primeng/inputtext';
-import { TextareaModule } from 'primeng/textarea';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { CustomerService } from '../../../core/services/customer.service';
 import { Customer } from '../../../core/models/customer';
+import { CustomerFormDialog } from '../customer-form-dialog/customer-form-dialog';
 
 @Component({
   selector: 'app-customer-list',
-  imports: [TableModule, ButtonModule, DialogModule, InputTextModule, TextareaModule, ReactiveFormsModule],
+  imports: [TableModule, ButtonModule, CustomerFormDialog],
   templateUrl: './customer-list.html',
   styleUrl: './customer-list.css',
 })
 export class CustomerList implements OnInit {
   private customerService = inject(CustomerService);
-  private fb = inject(FormBuilder);
+  private router = inject(Router);
 
   customers = signal<Customer[]>([]);
-  dialogVisible = false;
-
-  form = this.fb.nonNullable.group(
-    {
-      name: ['', Validators.required],
-      email: [''],
-      phone: [''],
-      notes: [''],
-    },
-    { validators: requireEmailOrPhone },
-  );
+  dialogVisible = signal(false);
 
   ngOnInit(): void {
     this.loadCustomers();
@@ -40,21 +28,10 @@ export class CustomerList implements OnInit {
   }
 
   openNew(): void {
-    this.form.reset();
-    this.dialogVisible = true;
+    this.dialogVisible.set(true);
   }
 
-  save(): void {
-    if (this.form.invalid) return;
-    this.customerService.createCustomer(this.form.getRawValue()).subscribe(() => {
-      this.dialogVisible = false;
-      this.loadCustomers();
-    });
+  openDetail(customer: Customer): void {
+    this.router.navigate(['/customers', customer.id]);
   }
-}
-
-function requireEmailOrPhone(group: AbstractControl): ValidationErrors | null {
-  const email = group.get('email')?.value?.trim();
-  const phone = group.get('phone')?.value?.trim();
-  return email || phone ? null : { contactRequired: true };
 }

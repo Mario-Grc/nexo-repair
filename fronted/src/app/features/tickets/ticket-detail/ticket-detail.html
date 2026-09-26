@@ -5,26 +5,25 @@
   <p><a routerLink="/tickets">Back to tickets</a></p>
 } @else if (ticket(); as t) {
   <div class="detail-header">
-    <a
-      pButton
-      icon="pi pi-arrow-left"
-      routerLink="/tickets"
-      aria-label="Back to tickets"
-      title="Back to tickets"
-      [text]="true"
-      [rounded]="true"
-      severity="secondary"
-      class="back-btn"
-    ></a>
     <h1>Ticket {{ shortId() }}</h1>
-    <p-tag [value]="statusLabels[t.status]" [severity]="statusSeverity[t.status]" />
-    @if (primaryStatus(); as next) {
-      @if (splitButtonItems().length === 0) {
-        <p-button [label]="'Mark as ' + statusLabels[next]" (onClick)="changeStatus(next)" />
-      } @else {
-        <p-splitButton [label]="'Mark as ' + statusLabels[next]" [model]="splitButtonItems()" (onClick)="changeStatus(next)" />
+    <div class="header-actions">
+      <a
+        pButton
+        label="Back"
+        icon="pi pi-arrow-left"
+        routerLink="/tickets"
+        aria-label="Back to tickets"
+        title="Back to tickets"
+        severity="secondary"
+      ></a>
+      @if (primaryStatus(); as next) {
+        @if (splitButtonItems().length === 0) {
+          <p-button [label]="'Mark as ' + statusLabels[next]" (onClick)="changeStatus(next)" />
+        } @else {
+          <p-splitButton [label]="'Mark as ' + statusLabels[next]" [model]="splitButtonItems()" (onClick)="changeStatus(next)" />
+        }
       }
-    }
+    </div>
   </div>
 
   @if (!isCancelled()) {

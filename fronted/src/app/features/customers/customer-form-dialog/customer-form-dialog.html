@@ -1,0 +1,23 @@
+<p-dialog
+  [header]="customer() ? 'Edit customer' : 'New customer'"
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+>
+  <form [formGroup]="form" (ngSubmit)="save()" class="dialog-form">
+    <label for="customer-name">
+      <span>Name <span class="required-marker" aria-hidden="true">*</span></span>
+      <input id="customer-name" pInputText formControlName="name" required autocomplete="off" />
+    </label>
+    <label for="customer-email">Email<input id="customer-email" pInputText formControlName="email" type="email" autocomplete="off" /></label>
+    <label for="customer-phone">Phone<input id="customer-phone" pInputText formControlName="phone" type="tel" autocomplete="off" /></label>
+    @if (form.hasError('contactRequired') && (form.controls.email.touched || form.controls.phone.touched)) {
+      <p class="error" role="alert">Provide at least an email or a phone number.</p>
+    }
+    <label for="customer-notes">Notes<textarea id="customer-notes" pTextarea formControlName="notes" rows="3"></textarea></label>
+    @if (saveError() != null) {
+      <p class="error" role="alert">{{ saveError() }}</p>
+    }
+    <p-button type="submit" label="Save" [disabled]="form.invalid || isSaving()" />
+  </form>
+</p-dialog>

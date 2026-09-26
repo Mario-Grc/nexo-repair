@@ -18,8 +18,8 @@ public class TicketController {
     }
 
     @GetMapping
-    public List<TicketDto> getAllTickets() {
-        return ticketService.getAllTickets();
+    public List<TicketDto> getAllTickets(@RequestParam(required = false) Long customerId) {
+        return ticketService.getAllTickets(customerId);
     }
 
     @GetMapping("/{publicId}")

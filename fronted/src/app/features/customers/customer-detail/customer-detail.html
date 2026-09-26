@@ -1,0 +1,58 @@
+<div class="customer-detail">
+@if (error()) {
+  <p-message severity="error">{{ error() }}</p-message>
+  <p><a routerLink="/customers">Back to customers</a></p>
+} @else if (customer(); as c) {
+  <div class="detail-header">
+    <h1>{{ c.name }}</h1>
+    <div class="header-actions">
+      <p-button label="Back" icon="pi pi-arrow-left" severity="secondary" (onClick)="goBack()" />
+      <p-button label="Edit" icon="pi pi-pencil" (onClick)="dialogVisible.set(true)" />
+    </div>
+  </div>
+
+  <div class="detail-grid">
+    <section class="main-column">
+      <p-card header="Tickets ({{ tickets().length }})">
+        <p-table [value]="tickets()" [paginator]="true" [rows]="10" emptyMessage="This customer has no tickets yet.">
+          <ng-template #header>
+            <tr><th>Device</th><th>Status</th><th>Technician</th><th>Created</th></tr>
+          </ng-template>
+          <ng-template #body let-ticket>
+            <tr (click)="openTicket(ticket)" style="cursor: pointer">
+              <td>{{ ticket.device.brand }} {{ ticket.device.model }}</td>
+              <td><p-tag [value]="getStatusLabel(ticket.status)" [severity]="getStatusSeverity(ticket.status)" /></td>
+              <td>{{ ticket.assignedEmployeeName ?? 'Unassigned' }}</td>
+              <td>{{ ticket.createdAt | date: 'dd/MM/yyyy' }}</td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-card>
+    </section>
+
+    <aside class="side-column">
+      <p-card header="Contact">
+        <p><strong>Email</strong></p>
+        <p>{{ c.email || '—' }}</p>
+        <p><strong>Phone</strong></p>
+        <p>{{ c.phone || '—' }}</p>
+      </p-card>
+
+      @if (c.notes) {
+        <p-card header="Notes">
+          <p>{{ c.notes }}</p>
+        </p-card>
+      }
+    </aside>
+  </div>
+
+  <app-customer-form-dialog
+    [visible]="dialogVisible()"
+    (visibleChange)="dialogVisible.set($event)"
+    [customer]="c"
+    (saved)="onSaved($event)"
+  />
+} @else {
+  <p>Loading customer…</p>
+}
+</div>

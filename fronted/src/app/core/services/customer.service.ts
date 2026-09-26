@@ -20,4 +20,8 @@ export class CustomerService {
   createCustomer(customer: NewCustomer): Observable<Customer> {
     return this.http.post<Customer>(this.baseUrl, customer);
   }
+
+  updateCustomer(id: number, customer: NewCustomer): Observable<Customer> {
+    return this.http.put<Customer>(`${this.baseUrl}/${id}`, customer);
+  }
 }
