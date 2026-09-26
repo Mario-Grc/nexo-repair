@@ -15,7 +15,6 @@ import { MenuItem, ConfirmationService } from 'primeng/api';
 import { TicketService } from '../../../core/services/ticket.service';
 import { CustomerService } from '../../../core/services/customer.service';
 import { EmployeeService } from '../../../core/services/employee.service';
-import { EmployeeSessionService } from '../../../core/services/employee-session.service';
 import { Ticket } from '../../../core/models/ticket';
 import { TicketStatus, TICKET_STATUS_LABELS, TICKET_STATUS_SEVERITY } from '../../../core/models/ticket-status';
 import { TimelineEntry } from '../../../core/models/timeline-entry';
@@ -67,7 +66,6 @@ export class TicketDetail implements OnInit {
   private ticketService = inject(TicketService);
   private customerService = inject(CustomerService);
   private employeeService = inject(EmployeeService);
-  private session = inject(EmployeeSessionService);
   private confirm = inject(ConfirmationService);
   private fb = inject(FormBuilder);
 
@@ -161,11 +159,10 @@ export class TicketDetail implements OnInit {
   }
 
   private doChangeStatus(status: TicketStatus): void {
-    const employee = this.session.current();
     const ticket = this.ticket();
-    if (!employee || !ticket) return;
+    if (!ticket) return;
     this.ticketService
-      .changeStatus(this.publicId, { newStatus: status, changedByEmployeeId: employee.id, note: null })
+      .changeStatus(this.publicId, { newStatus: status, note: null })
       .subscribe(updated => {
         this.ticket.set(updated);
         this.loadTimeline();
@@ -178,11 +175,8 @@ export class TicketDetail implements OnInit {
   }
 
   onAssign(): void {
-    const employee = this.session.current();
-    if (!employee) return;
     this.ticketService.assignEmployee(this.publicId, {
       employeeId: this.assignControl.value ?? null,
-      assignedByEmployeeId: employee.id,
     }).subscribe(updated => {
       this.ticket.set(updated);
       this.assignControl.setValue(updated.assignedEmployeeId ?? null, { emitEvent: false });
@@ -193,11 +187,9 @@ export class TicketDetail implements OnInit {
 
   addNote(): void {
     if (this.noteForm.invalid) return;
-    const employee = this.session.current();
-    if (!employee) return;
     const text = this.noteForm.controls.text.value.trim();
     if (!text) return;
-    this.ticketService.addNote(this.publicId, { authorEmployeeId: employee.id, text }).subscribe(() => {
+    this.ticketService.addNote(this.publicId, { text }).subscribe(() => {
       this.noteForm.reset();
       this.loadTimeline();
     });

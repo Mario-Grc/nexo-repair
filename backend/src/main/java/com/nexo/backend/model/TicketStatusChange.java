@@ -16,7 +16,7 @@ public class TicketStatusChange {
     private Ticket ticket;
 
     @Enumerated(EnumType.STRING)
-    private TicketStatus previousStatus; // null = es la creación del ticket
+    private TicketStatus previousStatus; // null means ticket creation
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

@@ -1,7 +1,9 @@
 package com.nexo.backend.controller;
 
 import com.nexo.backend.dto.*;
+import com.nexo.backend.security.EmployeePrincipal;
 import com.nexo.backend.service.TicketService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -28,23 +30,26 @@ public class TicketController {
     }
 
     @PostMapping
-    public TicketDto createTicket(@RequestBody CreateTicketDto dto) {
-        return ticketService.createTicket(dto);
+    public TicketDto createTicket(@RequestBody CreateTicketDto dto, @AuthenticationPrincipal EmployeePrincipal principal) {
+        return ticketService.createTicket(dto, principal.employeeId());
     }
 
     @PatchMapping("/{publicId}/assign")
-    public TicketDto assignEmployee(@PathVariable UUID publicId, @RequestBody AssignEmployeeDto dto) {
-        return ticketService.assignEmployee(publicId, dto.employeeId(), dto.assignedByEmployeeId());
+    public TicketDto assignEmployee(@PathVariable UUID publicId, @RequestBody AssignEmployeeDto dto,
+                                    @AuthenticationPrincipal EmployeePrincipal principal) {
+        return ticketService.assignEmployee(publicId, dto.employeeId(), principal.employeeId());
     }
 
     @PatchMapping("/{publicId}/status")
-    public TicketDto changeStatus(@PathVariable UUID publicId, @RequestBody ChangeStatusDto dto) {
-        return ticketService.changeStatus(publicId, dto.newStatus(), dto.changedByEmployeeId(), dto.note());
+    public TicketDto changeStatus(@PathVariable UUID publicId, @RequestBody ChangeStatusDto dto,
+                                  @AuthenticationPrincipal EmployeePrincipal principal) {
+        return ticketService.changeStatus(publicId, dto.newStatus(), principal.employeeId(), dto.note());
     }
 
     @PostMapping("/{publicId}/notes")
-    public void addNote(@PathVariable UUID publicId, @RequestBody AddNoteDto dto) {
-        ticketService.addNote(publicId, dto.authorEmployeeId(), dto.text());
+    public void addNote(@PathVariable UUID publicId, @RequestBody AddNoteDto dto,
+                        @AuthenticationPrincipal EmployeePrincipal principal) {
+        ticketService.addNote(publicId, principal.employeeId(), dto.text());
     }
 
     @GetMapping("/{publicId}/timeline")

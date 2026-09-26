@@ -4,16 +4,16 @@ import { TicketList } from './features/tickets/ticket-list/ticket-list';
 import { TicketDetail } from './features/tickets/ticket-detail/ticket-detail';
 import { CustomerList } from './features/customers/customer-list/customer-list';
 import { CustomerDetail } from './features/customers/customer-detail/customer-detail';
-import { employeeSessionGuard } from './core/guards/employee-session.guard';
-import { AppShellComponent } from './layout/app-shell.component';
-import { SelectEmployeeComponent } from './features/auth/select-employee.component';
+import { authGuard } from './core/guards/auth.guard';
+import { AppShellComponent } from './layout/app-shell';
+import { LoginComponent } from './features/auth/login';
 
 export const routes: Routes = [
-    { path: 'select-employee', component: SelectEmployeeComponent },
+    { path: 'login', component: LoginComponent },
     {
         path: '',
         component: AppShellComponent,
-        canActivate: [employeeSessionGuard],
+        canActivate: [authGuard],
         children: [
             { path: 'tickets', component: TicketList },
             { path: 'tickets/:publicId', component: TicketDetail },

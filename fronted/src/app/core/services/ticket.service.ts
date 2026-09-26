@@ -25,15 +25,15 @@ export class TicketService {
     return this.http.post<Ticket>(this.baseUrl, ticket);
   }
 
-  assignEmployee(publicId: string, dto: { employeeId: number | null; assignedByEmployeeId: number }): Observable<Ticket> {
+  assignEmployee(publicId: string, dto: { employeeId: number | null }): Observable<Ticket> {
     return this.http.patch<Ticket>(`${this.baseUrl}/${publicId}/assign`, dto);
   }
 
-  changeStatus(publicId: string, dto: { newStatus: TicketStatus; changedByEmployeeId: number; note: string | null }): Observable<Ticket> {
+  changeStatus(publicId: string, dto: { newStatus: TicketStatus; note: string | null }): Observable<Ticket> {
     return this.http.patch<Ticket>(`${this.baseUrl}/${publicId}/status`, dto);
   }
 
-  addNote(publicId: string, dto: { authorEmployeeId: number; text: string }): Observable<void> {
+  addNote(publicId: string, dto: { text: string }): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/${publicId}/notes`, dto);
   }
 

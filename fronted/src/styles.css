@@ -1,9 +1,9 @@
 body { margin: 0; font-family: 'Inter', sans-serif; }
 
-/* Altura mínima común para las filas de datos de todas las tablas.
-   Sin esto, los listados con p-tag (tickets) quedan con filas más altas
-   que los de solo texto (customers). En layout de tabla, height en tr
-   actúa como mínimo: las filas crecen si el contenido lo necesita. */
+/* Shared minimum height for data rows in every table.
+   Without it, lists with p-tag (tickets) end up with taller rows
+   than text only ones (customers). In table layout, height on tr
+   acts as a minimum. Rows still grow when content needs it. */
 .p-datatable-tbody > tr {
   height: 3.5rem;
 }

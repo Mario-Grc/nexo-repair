@@ -1,28 +1,27 @@
 # NEXO
 
-Nexo is a small management app for a device repair shop. It keeps track of customers, repair tickets with their status, and employees. Monorepo with a Spring Boot backend and an Angular frontend.
+Nexo is a small management app for a device repair shop, built as a learning and practice project. It helps keep track of customers, repair tickets and their status, and employees. Monorepo with a Spring Boot backend and an Angular frontend.
 > [!NOTE]
 > Work in progress.
 
-## Screenshots
+<!-- ## Screenshots -->
 
 ## Features
 
-- Employee session: pick the active employee on entry. The current employee is shown in the sidebar and can be switched.
-- Customers: paginated list and creation dialog.
-- Tickets: paginated list (customer, device, status, technician, date) and creation dialog linked to a customer.
+- Real login: email and password with JWT in an HttpOnly cookie (`SameSite=Strict`). Roles (`TECHNICIAN`, `RECEPTION`, `ADMIN`) enforced by the backend. The session survives page reloads.
+- Customers: paginated list, shared create/edit dialog, and a detail page with contact info plus the customer ticket history.
+- Tickets: paginated list (customer, device, status, technician, date), creation dialog linked to a customer, and a detail page with a progress stepper, technician assignment, status changes, internal notes and a full timeline.
 - Employees (admin only): list and inline creation.
-- The backend already supports the ticket workflow (assign technician, change status, notes, timeline), but the UI for it is still pending.
 
 ## Planned features
 
-- Detail views: ticket, customer and employee pages (status changes, assignment, notes and history).
+- Employee detail page.
 - Search and filters for tickets, customers and employees.
-- Real login/authentication with roles instead of the current employee picker.
+- Dashboard with simple metrics.
 
 ## Stack and architecture
 
-- `backend/`: Java 21, Spring Boot (Web MVC, Data JPA/Hibernate, Security), PostgreSQL. REST API under `/api` (`/customers`, `/tickets`, `/employees`).
+- `backend/`: Java 21, Spring Boot (Web MVC, Data JPA/Hibernate, Security, Validation), PostgreSQL. REST API under `/api` (`/auth`, `/customers`, `/tickets`, `/employees`). Auth is JWT in an HttpOnly cookie (jjwt, HS256) with role based authorization.
 - `fronted/`: Angular 21 (standalone components, signals, reactive forms) with PrimeNG 21. Code is split by feature (`customers`, `tickets`, `employees`), plus shared `core/` (services, models, guards) and `layout/` (app shell with sidebar).
 - The frontend calls the backend directly at `http://localhost:8080/api`.
 
@@ -54,6 +53,15 @@ cd backend
 ```
 
 Runs at `http://localhost:8080`. Tables are created automatically (`ddl-auto: update`), but the `nexo` database must already exist.
+
+On the first start with an empty employee table, a seeder creates an initial admin so you can log in:
+
+- Email `admin@nexo.local`, password `admin123` (development defaults).
+
+For anything beyond local development, set these environment variables:
+
+- `JWT_SECRET`: random value of at least 32 characters. Required in production.
+- `NEXO_ADMIN_EMAIL`, `NEXO_ADMIN_PASSWORD`, `NEXO_ADMIN_NAME`: credentials of the seeded admin.
 
 ### Frontend
 

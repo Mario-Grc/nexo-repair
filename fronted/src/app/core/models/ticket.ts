@@ -25,5 +25,4 @@ export interface NewTicket {
   problemDescription: string;
   device: Device;
   customerId: number;
-  createdByEmployeeId: number;
 }

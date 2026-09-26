@@ -11,7 +11,6 @@ import { TagModule } from 'primeng/tag';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TicketService } from '../../../core/services/ticket.service';
 import { CustomerService } from '../../../core/services/customer.service';
-import { EmployeeSessionService } from '../../../core/services/employee-session.service';
 import { Customer } from '../../../core/models/customer';
 import { Ticket } from '../../../core/models/ticket';
 import { DEVICE_TYPE_OPTIONS } from '../../../core/models/device-type';
@@ -25,7 +24,6 @@ import { TicketStatus, TICKET_STATUS_LABELS, TICKET_STATUS_SEVERITY } from '../.
 export class TicketList implements OnInit {
   private ticketService = inject(TicketService);
   private customerService = inject(CustomerService);
-  private session = inject(EmployeeSessionService);
   private fb = inject(FormBuilder);
   private router = inject(Router);
 
@@ -64,16 +62,14 @@ export class TicketList implements OnInit {
 
   save(): void {
     if (this.form.invalid) return;
-    const employee = this.session.current();
     const customerId = this.form.controls.customerId.value;
-    if (!employee || customerId === null) return;
+    if (customerId === null) return;
 
     const raw = this.form.getRawValue();
     this.ticketService.createTicket({
       customerId,
       problemDescription: raw.problemDescription,
       device: { ...raw.device, identifier: raw.device.identifier || null },
-      createdByEmployeeId: employee.id
     }).subscribe(() => {
       this.dialogVisible = false;
       this.loadTickets();

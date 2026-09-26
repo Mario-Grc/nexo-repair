@@ -1,4 +1,5 @@
 <div class="shell">
+  <p-confirmDialog />
   <aside class="sidebar">
     <div class="brand">Nexo</div>
     <nav>
@@ -9,7 +10,7 @@
       }
     </nav>
     <div class="current-employee">
-      <span class="employee-name">{{ session.current()?.name }}</span>
+      <span class="employee-name">{{ auth.current()?.name }}</span>
       <p-button
         icon="pi pi-sign-out"
         (onClick)="logout()"
@@ -17,8 +18,8 @@
         [rounded]="true"
         severity="secondary"
         size="small"
-        ariaLabel="Switch employee"
-        title="Switch employee"
+        ariaLabel="Log out"
+        title="Log out"
       />
     </div>
   </aside>

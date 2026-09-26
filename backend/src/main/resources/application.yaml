@@ -9,3 +9,12 @@ spring:
     hibernate:
       ddl-auto: update
     show-sql: true
+
+nexo:
+  jwt:
+    secret: ${JWT_SECRET:cambia-esto-por-un-valor-aleatorio-de-al-menos-32-caracteres}
+    expiration-hours: 8
+  admin:
+    email: ${NEXO_ADMIN_EMAIL:admin@nexo.local}
+    password: ${NEXO_ADMIN_PASSWORD:admin123}
+    name: ${NEXO_ADMIN_NAME:Admin}

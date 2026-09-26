@@ -20,7 +20,7 @@ public class EmployeeService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    private EmployeeDto toDto(Employee employee) {
+    public EmployeeDto toDto(Employee employee) {
         return new EmployeeDto(
                 employee.getId(),
                 employee.getName(),

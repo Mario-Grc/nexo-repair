@@ -53,11 +53,11 @@ public class TicketService {
         return toDto(findTicketOrThrow(publicId));
     }
 
-    public TicketDto createTicket(CreateTicketDto dto) {
+    public TicketDto createTicket(CreateTicketDto dto, Long createdByEmployeeId) {
         Customer customer = customerRepository.findById(dto.customerId())
-                .orElseThrow(() -> new ResourceNotFoundException("Customer " + dto.customerId() + " no encontrado"));
-        Employee createdBy = employeeRepository.findById(dto.createdByEmployeeId())
-                .orElseThrow(() -> new ResourceNotFoundException("Employee " + dto.createdByEmployeeId() + " no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Customer " + dto.customerId() + " not found"));
+        Employee createdBy = employeeRepository.findById(createdByEmployeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee " + createdByEmployeeId + " not found"));
 
         Ticket ticket = new Ticket();
         ticket.setProblemDescription(dto.problemDescription());
@@ -73,13 +73,13 @@ public class TicketService {
     public TicketDto assignEmployee(UUID publicId, Long employeeId, Long assignedByEmployeeId) {
         Ticket ticket = findTicketOrThrow(publicId);
         Employee assignedBy = employeeRepository.findById(assignedByEmployeeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee " + assignedByEmployeeId + " no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee " + assignedByEmployeeId + " not found"));
 
         Employee previous = ticket.getAssignedEmployee();
         Employee next = null;
         if (employeeId != null) {
             next = employeeRepository.findById(employeeId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Employee " + employeeId + " no encontrado"));
+                    .orElseThrow(() -> new ResourceNotFoundException("Employee " + employeeId + " not found"));
         }
         ticket.setAssignedEmployee(next);
         TicketDto dto = toDto(ticketRepository.save(ticket));
@@ -95,7 +95,7 @@ public class TicketService {
     public TicketDto changeStatus(UUID publicId, TicketStatus newStatus, Long changedByEmployeeId, String note) {
         Ticket ticket = findTicketOrThrow(publicId);
         Employee changedBy = employeeRepository.findById(changedByEmployeeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee " + changedByEmployeeId + " no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee " + changedByEmployeeId + " not found"));
 
         Set<TicketStatus> allowedNext = ALLOWED_TRANSITIONS.get(ticket.getStatus());
         if (!allowedNext.contains(newStatus)) {
@@ -114,7 +114,7 @@ public class TicketService {
     public void addNote(UUID publicId, Long authorEmployeeId, String text) {
         Ticket ticket = findTicketOrThrow(publicId);
         Employee author = employeeRepository.findById(authorEmployeeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee " + authorEmployeeId + " no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Employee " + authorEmployeeId + " not found"));
 
         TicketNote note = new TicketNote();
         note.setTicket(ticket);
@@ -164,7 +164,7 @@ public class TicketService {
 
     private Ticket findTicketOrThrow(UUID publicId) {
         return ticketRepository.findByPublicId(publicId)
-                .orElseThrow(() -> new ResourceNotFoundException("Ticket " + publicId + " no encontrado"));
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket " + publicId + " not found"));
     }
 
     private TicketDto toDto(Ticket ticket) {

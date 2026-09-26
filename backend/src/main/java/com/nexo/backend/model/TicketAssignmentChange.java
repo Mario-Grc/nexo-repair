@@ -17,7 +17,7 @@ public class TicketAssignmentChange {
 
     @ManyToOne
     @JoinColumn(name = "previous_employee_id")
-    private Employee previousEmployee; // null si no había nadie asignado antes
+    private Employee previousEmployee; // null when nobody was assigned before
 
     @ManyToOne
     @JoinColumn(name = "new_employee_id")
