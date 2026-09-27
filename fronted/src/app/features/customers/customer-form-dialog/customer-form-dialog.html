@@ -1,6 +1,7 @@
 <p-dialog
   [header]="customer() ? 'Edit customer' : 'New customer'"
   [(visible)]="visible"
+  (onShow)="onOpen()"
   [modal]="true"
   [style]="{ width: '420px' }"
 >

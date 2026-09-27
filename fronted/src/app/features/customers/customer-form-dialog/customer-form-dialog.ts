@@ -1,4 +1,4 @@
-import { Component, effect, inject, input, model, output, signal } from '@angular/core';
+import { Component, inject, input, model, output, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { InputTextModule } from 'primeng/inputtext';
@@ -36,25 +36,21 @@ export class CustomerFormDialog {
     { validators: requireEmailOrPhone },
   );
 
-  constructor() {
-    // Sync the form every time the dialog opens (not while typing:
-    // neither signal changes while the user edits).
-    effect(() => {
-      const isOpen = this.visible();
-      const current = this.customer();
-      if (!isOpen) return;
-      this.saveError.set(null);
-      this.form.reset(
-        current
-          ? {
-              name: current.name,
-              email: current.email ?? '',
-              phone: current.phone ?? '',
-              notes: current.notes ?? '',
-            }
-          : { name: '', email: '', phone: '', notes: '' },
-      );
-    });
+  // PrimeNG fires onShow every time the dialog opens. Plain method, no signals
+  // written inside an effect, so no change detection surprises.
+  onOpen(): void {
+    const current = this.customer();
+    this.saveError.set(null);
+    this.form.reset(
+      current
+        ? {
+            name: current.name,
+            email: current.email ?? '',
+            phone: current.phone ?? '',
+            notes: current.notes ?? '',
+          }
+        : { name: '', email: '', phone: '', notes: '' },
+    );
   }
 
   save(): void {

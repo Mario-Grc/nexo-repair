@@ -1,5 +1,6 @@
 package com.nexo.backend.controller;
 
+import com.nexo.backend.dto.ChangePasswordDto;
 import com.nexo.backend.dto.EmployeeDto;
 import com.nexo.backend.dto.LoginDto;
 import com.nexo.backend.exception.InvalidCredentialsException;
@@ -58,6 +59,12 @@ public class AuthController {
         Employee employee = employeeRepository.findById(principal.employeeId())
                 .orElseThrow(() -> new ResourceNotFoundException("Employee not found"));
         return employeeService.toDto(employee);
+    }
+
+    @PatchMapping("/password")
+    public void changePassword(@Valid @RequestBody ChangePasswordDto dto,
+                               @AuthenticationPrincipal EmployeePrincipal principal) {
+        employeeService.changePassword(principal.employeeId(), dto.currentPassword(), dto.newPassword());
     }
 
     private static ResponseCookie sessionCookie(String value, long maxAgeSeconds) {

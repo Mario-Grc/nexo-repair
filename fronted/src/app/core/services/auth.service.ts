@@ -26,6 +26,10 @@ export class AuthService {
     return this.http.get<Employee>(`${this.baseUrl}/me`).pipe(tap(employee => this._current.set(employee)));
   }
 
+  changePassword(currentPassword: string, newPassword: string) {
+    return this.http.patch<void>(`${this.baseUrl}/password`, { currentPassword, newPassword });
+  }
+
   get isLoggedIn(): boolean {
     return this._current() !== null;
   }

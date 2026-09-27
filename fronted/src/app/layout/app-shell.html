@@ -12,6 +12,16 @@
     <div class="current-employee">
       <span class="employee-name">{{ auth.current()?.name }}</span>
       <p-button
+        icon="pi pi-key"
+        (onClick)="openPasswordDialog()"
+        [text]="true"
+        [rounded]="true"
+        severity="secondary"
+        size="small"
+        ariaLabel="Change password"
+        title="Change password"
+      />
+      <p-button
         icon="pi pi-sign-out"
         (onClick)="logout()"
         [text]="true"
@@ -27,3 +37,5 @@
     <router-outlet />
   </main>
 </div>
+
+<app-change-password-dialog [visible]="passwordDialogVisible()" (visibleChange)="passwordDialogVisible.set($event)" />

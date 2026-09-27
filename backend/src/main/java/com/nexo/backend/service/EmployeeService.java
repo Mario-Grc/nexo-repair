@@ -2,6 +2,8 @@ package com.nexo.backend.service;
 
 import com.nexo.backend.dto.CreateEmployeeDto;
 import com.nexo.backend.dto.EmployeeDto;
+import com.nexo.backend.exception.InvalidCredentialsException;
+import com.nexo.backend.exception.ResourceNotFoundException;
 import com.nexo.backend.model.Employee;
 import com.nexo.backend.model.EmployeeRole;
 import com.nexo.backend.repository.EmployeeRepository;
@@ -45,5 +47,22 @@ public class EmployeeService {
                 dto.role()
         );
         return toDto(employeeRepository.save(employee));
+    }
+
+    public void changePassword(Long employeeId, String currentPassword, String newPassword) {
+        Employee employee = employeeRepository.findById(employeeId)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee " + employeeId + " not found"));
+        if (!passwordEncoder.matches(currentPassword, employee.getPasswordHash())) {
+            throw new InvalidCredentialsException("Current password is incorrect");
+        }
+        employee.setPasswordHash(passwordEncoder.encode(newPassword));
+        employeeRepository.save(employee);
+    }
+
+    public void resetPassword(Long id, String newPassword) {
+        Employee employee = employeeRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Employee " + id + " not found"));
+        employee.setPasswordHash(passwordEncoder.encode(newPassword));
+        employeeRepository.save(employee);
     }
 }
