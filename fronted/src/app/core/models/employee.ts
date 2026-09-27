@@ -7,3 +7,10 @@ export interface Employee {
   role: EmployeeRole;
   active: boolean;
 }
+
+export interface NewEmployee {
+  name: string;
+  email: string;
+  password: string;
+  role: EmployeeRole;
+}

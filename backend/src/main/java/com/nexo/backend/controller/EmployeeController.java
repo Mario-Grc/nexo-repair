@@ -3,9 +3,13 @@ package com.nexo.backend.controller;
 import com.nexo.backend.dto.CreateEmployeeDto;
 import com.nexo.backend.dto.EmployeeDto;
 import com.nexo.backend.dto.ResetPasswordDto;
+import com.nexo.backend.dto.UpdateActiveDto;
+import com.nexo.backend.dto.UpdateRoleDto;
 import com.nexo.backend.model.EmployeeRole;
+import com.nexo.backend.security.EmployeePrincipal;
 import com.nexo.backend.service.EmployeeService;
 import jakarta.validation.Valid;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -33,5 +37,17 @@ public class EmployeeController {
     @PatchMapping("/{id}/password")
     public void resetPassword(@PathVariable Long id, @Valid @RequestBody ResetPasswordDto dto) {
         employeeService.resetPassword(id, dto.newPassword());
+    }
+
+    @PatchMapping("/{id}/role")
+    public EmployeeDto updateRole(@PathVariable Long id, @Valid @RequestBody UpdateRoleDto dto,
+                                  @AuthenticationPrincipal EmployeePrincipal principal) {
+        return employeeService.updateRole(id, dto.role(), principal.employeeId());
+    }
+
+    @PatchMapping("/{id}/active")
+    public EmployeeDto updateActive(@PathVariable Long id, @Valid @RequestBody UpdateActiveDto dto,
+                                    @AuthenticationPrincipal EmployeePrincipal principal) {
+        return employeeService.updateActive(id, dto.active(), principal.employeeId());
     }
 }

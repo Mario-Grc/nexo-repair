@@ -1,19 +1,118 @@
-<h2>Employees</h2>
+<div class="page-header">
+  <h1>Employees</h1>
+  <p-button label="New employee" icon="pi pi-plus" (onClick)="openNew()" />
+</div>
 
-<app-employee-form (created)="employeesResource.reload()" />
-
-@if (employeesResource.isLoading()) {
-  <p>Loading employees...</p>
-} @else if (employeesResource.value(); as employees) {
-  @if (employees.length > 0) {
-    <ul>
-      @for (employee of employees; track employee.id) {
-        <li>{{ employee.id }} - {{ employee.name }}</li>
-      }
-    </ul>
-  } @else {
-    <p>There are no employees.</p>
-  }
-} @else {
-  <p>Could not load employees.</p>
+@if (listError() != null) {
+  <p class="error" role="alert">{{ listError() }}</p>
 }
+
+<p-table [value]="employees()" [paginator]="true" [rows]="10" emptyMessage="No employees found.">
+  <ng-template #header>
+    <tr>
+      <th>Name</th>
+      <th>Email</th>
+      <th>Role</th>
+      <th>Active</th>
+      <th>Actions</th>
+    </tr>
+  </ng-template>
+  <ng-template #body let-employee>
+    <tr>
+      <td>{{ employee.name }}</td>
+      <td>{{ employee.email }}</td>
+      <td>
+        <p-select
+          [options]="roleOptions"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="employee.role"
+          [disabled]="isSelf(employee)"
+          appendTo="body"
+          [attr.aria-label]="'Role for ' + employee.name"
+          (onChange)="onRoleChange(employee, $event.value)"
+        />
+      </td>
+      <td>
+        <p-toggleswitch
+          [ngModel]="employee.active"
+          [disabled]="isSelf(employee)"
+          [attr.aria-label]="'Active status for ' + employee.name"
+          (onChange)="onActiveChange(employee, $event.checked)"
+        />
+      </td>
+      <td>
+        <p-button label="Reset password" size="small" [disabled]="isSelf(employee)" (onClick)="openReset(employee)" />
+      </td>
+    </tr>
+  </ng-template>
+</p-table>
+
+<p-dialog
+  header="New employee"
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [modal]="true"
+  [style]="{ width: '420px' }"
+>
+  <form [formGroup]="form" (ngSubmit)="create()" class="dialog-form">
+    <label for="employee-name">
+      <span>Name <span class="required-marker" aria-hidden="true">*</span></span>
+      <input id="employee-name" pInputText formControlName="name" autocomplete="off" />
+    </label>
+    @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+      <p class="error" role="alert">Name is required.</p>
+    }
+    @if (form.controls.name.touched && !form.controls.name.hasError('required') && form.controls.name.hasError('blank')) {
+      <p class="error" role="alert">Name cannot be blank.</p>
+    }
+    <label for="employee-email">
+      <span>Email <span class="required-marker" aria-hidden="true">*</span></span>
+      <input id="employee-email" pInputText formControlName="email" type="email" autocomplete="off" />
+    </label>
+    @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+      <p class="error" role="alert">Email is required.</p>
+    }
+    @if (form.controls.email.touched && form.controls.email.hasError('email')) {
+      <p class="error" role="alert">Email is not valid.</p>
+    }
+    <label for="employee-password">
+      <span>Password <span class="required-marker" aria-hidden="true">*</span></span>
+      <p-password
+        id="employee-password"
+        formControlName="password"
+        [feedback]="false"
+        autocomplete="new-password"
+        [style]="{ width: '100%' }"
+        [inputStyle]="{ width: '100%' }"
+      />
+    </label>
+    @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+      <p class="error" role="alert">Password is required.</p>
+    }
+    @if (form.controls.password.touched && form.controls.password.hasError('minlength')) {
+      <p class="error" role="alert">Password must be at least 8 characters.</p>
+    }
+    <label for="employee-role">
+      <span>Role <span class="required-marker" aria-hidden="true">*</span></span>
+      <p-select
+        id="employee-role"
+        [options]="roleOptions"
+        optionLabel="label"
+        optionValue="value"
+        formControlName="role"
+        appendTo="body"
+      />
+    </label>
+    @if (createError() != null) {
+      <p class="error" role="alert">{{ createError() }}</p>
+    }
+    <p-button type="submit" label="Create employee" [disabled]="form.invalid || isCreating()" />
+  </form>
+</p-dialog>
+
+<app-reset-password-dialog
+  [visible]="resetDialogVisible()"
+  (visibleChange)="resetDialogVisible.set($event)"
+  [employeeId]="selectedEmployeeId()"
+/>

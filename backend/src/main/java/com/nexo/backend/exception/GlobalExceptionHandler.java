@@ -1,5 +1,6 @@
 package com.nexo.backend.exception;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -25,6 +26,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<String> handleInvalidCredentials(InvalidCredentialsException ex) {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<String> handleDuplicateEmail(DuplicateEmailException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(DataIntegrityViolationException.class)
+    public ResponseEntity<String> handleDataConflict(DataIntegrityViolationException ex) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body("Email already in use");
+    }
+
+    @ExceptionHandler(SelfModificationException.class)
+    public ResponseEntity<String> handleSelfModification(SelfModificationException ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

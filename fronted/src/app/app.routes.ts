@@ -5,6 +5,7 @@ import { TicketDetail } from './features/tickets/ticket-detail/ticket-detail';
 import { CustomerList } from './features/customers/customer-list/customer-list';
 import { CustomerDetail } from './features/customers/customer-detail/customer-detail';
 import { authGuard } from './core/guards/auth.guard';
+import { adminGuard } from './core/guards/admin.guard';
 import { AppShellComponent } from './layout/app-shell';
 import { LoginComponent } from './features/auth/login';
 
@@ -19,7 +20,7 @@ export const routes: Routes = [
             { path: 'tickets/:publicId', component: TicketDetail },
             { path: 'customers', component: CustomerList },
             { path: 'customers/:id', component: CustomerDetail },
-            { path: 'employees', component: EmployeeList },
+            { path: 'employees', component: EmployeeList, canActivate: [adminGuard] },
             { path: '', redirectTo: 'tickets', pathMatch: 'full' }
         ]
     }

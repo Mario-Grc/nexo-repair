@@ -28,13 +28,13 @@
   <form [formGroup]="form" (ngSubmit)="save()" class="dialog-form">
     <label>
       <span>Customer <span class="required-marker" aria-hidden="true">*</span></span>
-      <p-select [options]="customers()" optionLabel="name" optionValue="id" formControlName="customerId" [filter]="true" placeholder="Select a customer" required />
+      <p-select [options]="customers()" optionLabel="name" optionValue="id" formControlName="customerId" appendTo="body" [filter]="true" placeholder="Select a customer" required />
     </label>
 
     <div formGroupName="device" class="device-group">
       <label>
         <span>Device type <span class="required-marker" aria-hidden="true">*</span></span>
-        <p-select [options]="deviceTypeOptions" optionLabel="label" optionValue="value" formControlName="type" required />
+        <p-select [options]="deviceTypeOptions" optionLabel="label" optionValue="value" formControlName="type" appendTo="body" required />
       </label>
       <label>Brand<input pInputText formControlName="brand" /></label>
       <label>Model<input pInputText formControlName="model" /></label>
