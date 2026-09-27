@@ -58,7 +58,7 @@
                   <strong>{{ entry.authorName }}</strong>
                   <p-tag [value]="statusLabels[entry.newStatus]" [severity]="statusSeverity[entry.newStatus]" />
                 </div>
-                <time>{{ entry.occurredAt | date:'short' }}</time>
+                <time>{{ entry.occurredAt | date:'dd/MM/yyyy, HH:mm' }}</time>
               </div>
             }
             @case ('NOTE') {
@@ -68,7 +68,7 @@
                   <strong>{{ entry.authorName }}</strong>
                   <p>{{ entry.text }}</p>
                 </div>
-                <time>{{ entry.occurredAt | date:'short' }}</time>
+                <time>{{ entry.occurredAt | date:'dd/MM/yyyy, HH:mm' }}</time>
               </div>
             }
             @case ('ASSIGNMENT_CHANGE') {
@@ -78,7 +78,7 @@
                   <strong>{{ entry.authorName }}</strong>
                   <span>reassigned from {{ entry.previousEmployeeName ?? 'Unassigned' }} to {{ entry.newEmployeeName ?? 'Unassigned' }}</span>
                 </div>
-                <time>{{ entry.occurredAt | date:'short' }}</time>
+                <time>{{ entry.occurredAt | date:'dd/MM/yyyy, HH:mm' }}</time>
               </div>
             }
           }

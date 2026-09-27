@@ -4,18 +4,24 @@ Nexo is a small management app for a device repair shop, built as a learning and
 > [!NOTE]
 > Work in progress.
 
-<!-- ## Screenshots -->
+## Screenshots
+<img src="images/login.png" width="800" alt="Login page (work in progress)">
+
+*Screenshot of the login page with email and password fields.*
+
+<img src="images/ticket-detail.png" width="800" alt="Ticket detail page (work in progress)">
+
+*Screenshot of a ticket detail page with progress stepper, technician assignment, status changes, internal notes and a full timeline.*
 
 ## Features
 
 - Real login: email and password with JWT in an HttpOnly cookie (`SameSite=Strict`). Roles (`TECHNICIAN`, `RECEPTION`, `ADMIN`) enforced by the backend. The session survives page reloads.
 - Customers: paginated list, shared create/edit dialog, and a detail page with contact info plus the customer ticket history.
 - Tickets: paginated list (customer, device, status, technician, date), creation dialog linked to a customer, and a detail page with a progress stepper, technician assignment, status changes, internal notes and a full timeline.
-- Employees (admin only): list and inline creation.
+- Employees (admin only): list, creation and edit.
 
 ## Planned features
 
-- Employee detail page.
 - Search and filters for tickets, customers and employees.
 - Dashboard with simple metrics.
 
