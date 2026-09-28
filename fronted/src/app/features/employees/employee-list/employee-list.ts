@@ -12,6 +12,7 @@ import { EmployeeService } from '../../../core/services/employee.service';
 import { AuthService } from '../../../core/services/auth.service';
 import { Employee, EmployeeRole } from '../../../core/models/employee';
 import { ResetPasswordDialog } from '../reset-password-dialog/reset-password-dialog';
+import { EditEmployeeDialog } from '../edit-employee-dialog/edit-employee-dialog';
 
 @Component({
   selector: 'app-employee-list',
@@ -26,8 +27,10 @@ import { ResetPasswordDialog } from '../reset-password-dialog/reset-password-dia
     ReactiveFormsModule,
     FormsModule,
     ResetPasswordDialog,
+    EditEmployeeDialog,
   ],
   templateUrl: './employee-list.html',
+  styleUrl: './employee-list.css',
 })
 export class EmployeeList implements OnInit {
   private employeeService = inject(EmployeeService);
@@ -39,7 +42,9 @@ export class EmployeeList implements OnInit {
   employees = signal<Employee[]>([]);
   dialogVisible = signal(false);
   resetDialogVisible = signal(false);
+  editDialogVisible = signal(false);
   selectedEmployeeId = signal<number | null>(null);
+  editingEmployee = signal<Employee | null>(null);
   listError = signal<string | null>(null);
   isCreating = signal(false);
   createError = signal<string | null>(null);
@@ -131,6 +136,11 @@ export class EmployeeList implements OnInit {
   openReset(employee: Employee): void {
     this.selectedEmployeeId.set(employee.id);
     this.resetDialogVisible.set(true);
+  }
+
+  openEdit(employee: Employee): void {
+    this.editingEmployee.set(employee);
+    this.editDialogVisible.set(true);
   }
 }
 

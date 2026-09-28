@@ -42,7 +42,10 @@
         />
       </td>
       <td>
-        <p-button label="Reset password" size="small" [disabled]="isSelf(employee)" (onClick)="openReset(employee)" />
+        <div class="row-actions">
+          <p-button label="Edit" size="small" (onClick)="openEdit(employee)" />
+          <p-button label="Reset password" size="small" [disabled]="isSelf(employee)" (onClick)="openReset(employee)" />
+        </div>
       </td>
     </tr>
   </ng-template>
@@ -115,4 +118,11 @@
   [visible]="resetDialogVisible()"
   (visibleChange)="resetDialogVisible.set($event)"
   [employeeId]="selectedEmployeeId()"
+/>
+
+<app-edit-employee-dialog
+  [visible]="editDialogVisible()"
+  (visibleChange)="editDialogVisible.set($event)"
+  [employee]="editingEmployee()"
+  (saved)="loadEmployees()"
 />

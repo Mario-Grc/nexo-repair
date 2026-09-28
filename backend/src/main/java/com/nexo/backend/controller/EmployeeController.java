@@ -4,6 +4,7 @@ import com.nexo.backend.dto.CreateEmployeeDto;
 import com.nexo.backend.dto.EmployeeDto;
 import com.nexo.backend.dto.ResetPasswordDto;
 import com.nexo.backend.dto.UpdateActiveDto;
+import com.nexo.backend.dto.UpdateEmployeeProfileDto;
 import com.nexo.backend.dto.UpdateRoleDto;
 import com.nexo.backend.model.EmployeeRole;
 import com.nexo.backend.security.EmployeePrincipal;
@@ -49,5 +50,10 @@ public class EmployeeController {
     public EmployeeDto updateActive(@PathVariable Long id, @Valid @RequestBody UpdateActiveDto dto,
                                     @AuthenticationPrincipal EmployeePrincipal principal) {
         return employeeService.updateActive(id, dto.active(), principal.employeeId());
+    }
+
+    @PatchMapping("/{id}/profile")
+    public EmployeeDto updateProfile(@PathVariable Long id, @Valid @RequestBody UpdateEmployeeProfileDto dto) {
+        return employeeService.updateProfile(id, dto);
     }
 }

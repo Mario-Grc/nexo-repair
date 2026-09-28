@@ -1,0 +1,28 @@
+<p-dialog header="Edit employee" [(visible)]="visible" (onShow)="onOpen()" [modal]="true" [style]="{ width: '420px' }">
+  <form [formGroup]="form" (ngSubmit)="save()" class="dialog-form">
+    <label for="edit-employee-name">
+      <span>Name <span class="required-marker" aria-hidden="true">*</span></span>
+      <input id="edit-employee-name" pInputText formControlName="name" autocomplete="off" />
+    </label>
+    @if (form.controls.name.touched && form.controls.name.hasError('required')) {
+      <p class="error" role="alert">Name is required.</p>
+    }
+    @if (form.controls.name.touched && !form.controls.name.hasError('required') && form.controls.name.hasError('blank')) {
+      <p class="error" role="alert">Name cannot be blank.</p>
+    }
+    <label for="edit-employee-email">
+      <span>Email <span class="required-marker" aria-hidden="true">*</span></span>
+      <input id="edit-employee-email" pInputText formControlName="email" type="email" autocomplete="off" />
+    </label>
+    @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+      <p class="error" role="alert">Email is required.</p>
+    }
+    @if (form.controls.email.touched && form.controls.email.hasError('email')) {
+      <p class="error" role="alert">Email is not valid.</p>
+    }
+    @if (saveError() != null) {
+      <p class="error" role="alert">{{ saveError() }}</p>
+    }
+    <p-button type="submit" label="Save" [disabled]="form.invalid || isSaving()" />
+  </form>
+</p-dialog>

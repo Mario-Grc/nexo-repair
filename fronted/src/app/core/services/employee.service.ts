@@ -32,4 +32,7 @@ export class EmployeeService {
     return this.http.patch<void>(`${this.baseUrl}/${id}/password`, { newPassword });
   }
 
+  updateProfile(id: number, profile: { name: string; email: string }): Observable<Employee> {
+    return this.http.patch<Employee>(`${this.baseUrl}/${id}/profile`, profile);
+  }
 }
