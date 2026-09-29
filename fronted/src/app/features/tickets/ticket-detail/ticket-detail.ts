@@ -14,17 +14,13 @@ import { MessageModule } from 'primeng/message';
 import { MenuItem, ConfirmationService } from 'primeng/api';
 import { TicketService } from '../../../core/services/ticket.service';
 import { CustomerService } from '../../../core/services/customer.service';
-import { EmployeeService } from '../../../core/services/employee.service';
+import { AssignableTechnician, EmployeeService } from '../../../core/services/employee.service';
 import { Ticket } from '../../../core/models/ticket';
 import { TicketStatus, TICKET_STATUS_LABELS, TICKET_STATUS_SEVERITY } from '../../../core/models/ticket-status';
 import { TimelineEntry } from '../../../core/models/timeline-entry';
 import { Customer } from '../../../core/models/customer';
-import { Employee } from '../../../core/models/employee';
 import { DEVICE_TYPE_LABELS } from '../../../core/models/device-type';
-
-// The stepper is linear: parts are expected before work begins, while the backend
-// state machine still allows moving between IN_PROGRESS and WAITING_FOR_PARTS.
-const STEPPER_ORDER: TicketStatus[] = ['PENDING', 'WAITING_FOR_PARTS', 'IN_PROGRESS', 'COMPLETED', 'DELIVERED'];
+import { STEPPER_ORDER, getStepperIndex } from './stepper-index';
 
 // One-way transitions: COMPLETED cannot return to IN_PROGRESS, while DELIVERED
 // and CANCELLED are terminal states. Only these statuses require confirmation.
@@ -74,7 +70,7 @@ export class TicketDetail implements OnInit {
   ticket = signal<Ticket | null>(null);
   timeline = signal<TimelineEntry[]>([]);
   customer = signal<Customer | null>(null);
-  technicians = signal<Employee[]>([]);
+  technicians = signal<AssignableTechnician[]>([]);
   error = signal<string | null>(null);
   // The technician selection is staged and saved only when Save is clicked.
   assignDirty = signal(false);
@@ -89,7 +85,7 @@ export class TicketDetail implements OnInit {
   isCancelled = computed(() => this.ticket()?.status === 'CANCELLED');
   activeIndex = computed(() => {
     const status = this.ticket()?.status;
-    return status ? STEPPER_ORDER.indexOf(status) : 0;
+    return status ? getStepperIndex(status) : 0;
   });
   primaryStatus = computed(() => this.ticket()?.allowedNextStatuses[0] ?? null);
   splitButtonItems = computed<MenuItem[]>(() =>
@@ -99,8 +95,8 @@ export class TicketDetail implements OnInit {
     })),
   );
   technicianOptions = computed(() => [
-    { label: 'Unassigned', value: null as number | null },
-    ...this.technicians().map(t => ({ label: t.name, value: t.id as number | null })),
+    { name: 'Unassigned', id: null as number | null },
+    ...this.technicians().map(t => ({ name: t.name, id: t.id as number | null })),
   ]);
 
   noteForm = this.fb.nonNullable.group({
@@ -118,7 +114,7 @@ export class TicketDetail implements OnInit {
     this.publicId = publicId;
     this.loadTicket();
     this.loadTimeline();
-    this.employeeService.getEmployees({ role: 'TECHNICIAN', active: true }).subscribe(list => this.technicians.set(list));
+    this.employeeService.getAssignableTechnicians().subscribe(list => this.technicians.set(list));
   }
 
   loadTicket(): void {

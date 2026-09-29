@@ -2,6 +2,7 @@ package com.nexo.backend.controller;
 
 import com.nexo.backend.dto.CreateEmployeeDto;
 import com.nexo.backend.dto.EmployeeDto;
+import com.nexo.backend.dto.EmployeeOptionDto;
 import com.nexo.backend.dto.ResetPasswordDto;
 import com.nexo.backend.dto.UpdateActiveDto;
 import com.nexo.backend.dto.UpdateEmployeeProfileDto;
@@ -28,6 +29,11 @@ public class EmployeeController {
     public List<EmployeeDto> getEmployees(@RequestParam(required = false) EmployeeRole role,
                                           @RequestParam(required = false) Boolean active) {
         return employeeService.getEmployees(role, active);
+    }
+
+    @GetMapping("/assignable")
+    public List<EmployeeOptionDto> getAssignable() {
+        return employeeService.getAssignable();
     }
 
     @PostMapping

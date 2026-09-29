@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
-import { tap } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 import { Employee } from '../models/employee';
 import { environment } from '../../../environments/environment';
 
@@ -19,7 +19,11 @@ export class AuthService {
   }
 
   logout() {
-    return this.http.post(`${this.baseUrl}/logout`, {}).pipe(tap(() => this._current.set(null)));
+    return this.http.post(`${this.baseUrl}/logout`, {}).pipe(finalize(() => this.clearSession()));
+  }
+
+  clearSession(): void {
+    this._current.set(null);
   }
 
   restoreSession() {

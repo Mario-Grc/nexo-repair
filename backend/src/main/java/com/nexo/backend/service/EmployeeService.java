@@ -2,9 +2,9 @@ package com.nexo.backend.service;
 
 import com.nexo.backend.dto.CreateEmployeeDto;
 import com.nexo.backend.dto.EmployeeDto;
+import com.nexo.backend.dto.EmployeeOptionDto;
 import com.nexo.backend.dto.UpdateEmployeeProfileDto;
 import com.nexo.backend.exception.DuplicateEmailException;
-import com.nexo.backend.exception.InvalidCredentialsException;
 import com.nexo.backend.exception.ResourceNotFoundException;
 import com.nexo.backend.exception.SelfModificationException;
 import com.nexo.backend.model.Employee;
@@ -27,13 +27,7 @@ public class EmployeeService {
     }
 
     public EmployeeDto toDto(Employee employee) {
-        return new EmployeeDto(
-                employee.getId(),
-                employee.getName(),
-                employee.getEmail(),
-                employee.getRole(),
-                employee.isActive()
-        );
+        return EmployeeDto.from(employee);
     }
 
     public List<EmployeeDto> getEmployees(EmployeeRole role, Boolean active) {
@@ -41,6 +35,14 @@ public class EmployeeService {
                 .filter(e -> role == null || e.getRole() == role)
                 .filter(e -> active == null || e.isActive() == active)
                 .map(this::toDto).toList();
+    }
+
+    // Active technicians only, for the ticket assignment dropdown.
+    public List<EmployeeOptionDto> getAssignable() {
+        return employeeRepository.findAll().stream()
+                .filter(e -> e.isActive() && e.getRole() == EmployeeRole.TECHNICIAN)
+                .map(e -> new EmployeeOptionDto(e.getId(), e.getName()))
+                .toList();
     }
 
     private void validateEmailNotTaken(String email, Long excludingId) {
@@ -62,16 +64,6 @@ public class EmployeeService {
                 dto.role()
         );
         return toDto(employeeRepository.save(employee));
-    }
-
-    public void changePassword(Long employeeId, String currentPassword, String newPassword) {
-        Employee employee = employeeRepository.findById(employeeId)
-                .orElseThrow(() -> new ResourceNotFoundException("Employee " + employeeId + " not found"));
-        if (!passwordEncoder.matches(currentPassword, employee.getPasswordHash())) {
-            throw new InvalidCredentialsException("Current password is incorrect");
-        }
-        employee.setPasswordHash(passwordEncoder.encode(newPassword));
-        employeeRepository.save(employee);
     }
 
     public void resetPassword(Long id, String newPassword) {

@@ -4,6 +4,11 @@ import { Observable } from 'rxjs';
 import { Employee, EmployeeRole, NewEmployee } from '../models/employee';
 import { environment } from '../../../environments/environment';
 
+export interface AssignableTechnician {
+  id: number;
+  name: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class EmployeeService {
   private http = inject(HttpClient);
@@ -14,6 +19,10 @@ export class EmployeeService {
     if (filters?.role) params = params.set('role', filters.role);
     if (filters?.active !== undefined) params = params.set('active', String(filters.active));
     return this.http.get<Employee[]>(this.baseUrl, { params });
+  }
+
+  getAssignableTechnicians(): Observable<AssignableTechnician[]> {
+    return this.http.get<AssignableTechnician[]>(`${this.baseUrl}/assignable`);
   }
 
   createEmployee(employee: NewEmployee): Observable<Employee> {

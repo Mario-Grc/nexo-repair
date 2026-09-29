@@ -1,7 +1,6 @@
 package com.nexo.backend.config;
 
 import com.nexo.backend.security.JwtAuthenticationFilter;
-import com.nexo.backend.security.JwtService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -24,10 +23,10 @@ import java.util.List;
 @Configuration
 public class SecurityConfig {
 
-    private final JwtService jwtService;
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
-    public SecurityConfig(JwtService jwtService) {
-        this.jwtService = jwtService;
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
     }
 
     @Bean
@@ -43,12 +42,14 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                         .requestMatchers("/api/auth/login").permitAll()
+                        // assignable sits above the employees rules because rules apply in order.
+                        // The full list stays authenticated for any employee; only writes need ADMIN.
+                        .requestMatchers(HttpMethod.GET, "/api/employees/assignable").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/employees").hasAuthority("ROLE_ADMIN")
-                        .requestMatchers(HttpMethod.GET, "/api/employees").hasAuthority("ROLE_ADMIN")
                         .requestMatchers(HttpMethod.PATCH, "/api/employees/**").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated()
                 )
-                .addFilterBefore(new JwtAuthenticationFilter(jwtService), UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
 

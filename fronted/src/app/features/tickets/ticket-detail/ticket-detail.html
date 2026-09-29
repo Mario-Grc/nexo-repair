@@ -106,8 +106,8 @@
           <span class="sr-only">Assigned technician</span>
           <p-select
             [options]="technicianOptions()"
-            optionLabel="label"
-            optionValue="value"
+            optionLabel="name"
+            optionValue="id"
             placeholder="Select a technician"
             [formControl]="assignControl"
             (onChange)="onAssignStaged()"

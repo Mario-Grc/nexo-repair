@@ -6,19 +6,22 @@ import com.nexo.backend.exception.ResourceNotFoundException;
 import com.nexo.backend.model.*;
 import com.nexo.backend.repository.*;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
 @Service
 public class TicketService {
 
-    private static final Map<TicketStatus, Set<TicketStatus>> ALLOWED_TRANSITIONS = Map.of(
-            TicketStatus.PENDING, Set.of(TicketStatus.IN_PROGRESS, TicketStatus.CANCELLED),
-            TicketStatus.IN_PROGRESS, Set.of(TicketStatus.WAITING_FOR_PARTS, TicketStatus.COMPLETED, TicketStatus.CANCELLED),
-            TicketStatus.WAITING_FOR_PARTS, Set.of(TicketStatus.IN_PROGRESS, TicketStatus.CANCELLED),
-            TicketStatus.COMPLETED, Set.of(TicketStatus.DELIVERED),
-            TicketStatus.DELIVERED, Set.of(),
-            TicketStatus.CANCELLED, Set.of()
+    // Ordered lists. The first element drives the primary action button,
+    // so the happy path comes first and CANCELLED last.
+    private static final Map<TicketStatus, List<TicketStatus>> ALLOWED_TRANSITIONS = Map.of(
+            TicketStatus.PENDING, List.of(TicketStatus.IN_PROGRESS, TicketStatus.CANCELLED),
+            TicketStatus.IN_PROGRESS, List.of(TicketStatus.COMPLETED, TicketStatus.WAITING_FOR_PARTS, TicketStatus.CANCELLED),
+            TicketStatus.WAITING_FOR_PARTS, List.of(TicketStatus.IN_PROGRESS, TicketStatus.CANCELLED),
+            TicketStatus.COMPLETED, List.of(TicketStatus.DELIVERED),
+            TicketStatus.DELIVERED, List.of(),
+            TicketStatus.CANCELLED, List.of()
     );
 
     private final TicketRepository ticketRepository;
@@ -53,6 +56,7 @@ public class TicketService {
         return toDto(findTicketOrThrow(publicId));
     }
 
+    @Transactional
     public TicketDto createTicket(CreateTicketDto dto, Long createdByEmployeeId) {
         Customer customer = customerRepository.findById(dto.customerId())
                 .orElseThrow(() -> new ResourceNotFoundException("Customer " + dto.customerId() + " not found"));
@@ -70,6 +74,7 @@ public class TicketService {
         return toDto(ticket);
     }
 
+    @Transactional
     public TicketDto assignEmployee(UUID publicId, Long employeeId, Long assignedByEmployeeId) {
         Ticket ticket = findTicketOrThrow(publicId);
         Employee assignedBy = employeeRepository.findById(assignedByEmployeeId)
@@ -92,12 +97,13 @@ public class TicketService {
         return dto;
     }
 
+    @Transactional
     public TicketDto changeStatus(UUID publicId, TicketStatus newStatus, Long changedByEmployeeId, String note) {
         Ticket ticket = findTicketOrThrow(publicId);
         Employee changedBy = employeeRepository.findById(changedByEmployeeId)
                 .orElseThrow(() -> new ResourceNotFoundException("Employee " + changedByEmployeeId + " not found"));
 
-        Set<TicketStatus> allowedNext = ALLOWED_TRANSITIONS.get(ticket.getStatus());
+        List<TicketStatus> allowedNext = ALLOWED_TRANSITIONS.get(ticket.getStatus());
         if (!allowedNext.contains(newStatus)) {
             throw new InvalidStatusTransitionException(ticket.getStatus(), newStatus);
         }
@@ -178,7 +184,7 @@ public class TicketService {
                 ticket.getAssignedEmployee() != null ? ticket.getAssignedEmployee().getId() : null,
                 ticket.getAssignedEmployee() != null ? ticket.getAssignedEmployee().getName() : null,
                 ticket.getCreatedAt(),
-                ALLOWED_TRANSITIONS.get(ticket.getStatus()).stream().sorted().toList()
+                List.copyOf(ALLOWED_TRANSITIONS.get(ticket.getStatus()))
         );
     }
 
