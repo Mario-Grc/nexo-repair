@@ -200,3 +200,171 @@
     grid-template-columns: 1fr;
   }
 }
+
+.ticket-detail .problem-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+}
+
+.ticket-detail .problem-title-row h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.ticket-detail .timeline-body .status-note {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.ticket-detail .receipt-toolbar {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid var(--p-surface-200, #e5e7eb);
+}
+
+.ticket-detail .receipt-options {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.ticket-detail .receipt-options legend {
+  font-weight: 700;
+  padding: 0;
+  margin-bottom: 0.375rem;
+}
+
+.ticket-detail .receipt-options label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.ticket-detail .receipt-toolbar-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.ticket-detail .receipt-content h2 {
+  margin: 0 0 0.25rem;
+}
+
+.ticket-detail .receipt-content h3 {
+  margin: 1rem 0 0.25rem;
+}
+
+.ticket-detail .receipt-content p {
+  margin: 0.25rem 0;
+}
+
+.ticket-detail .receipt-shop {
+  border-bottom: 2px solid #111827;
+  padding-bottom: 0.5rem;
+}
+
+.ticket-detail .receipt-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.ticket-detail .receipt-table th,
+.ticket-detail .receipt-table td {
+  border: 1px solid var(--p-surface-200, #e5e7eb);
+  padding: 0.375rem 0.5rem;
+  text-align: left;
+}
+
+.ticket-detail .receipt-table thead th {
+  background: var(--p-surface-50, #f9fafb);
+}
+
+.ticket-detail .receipt-table th:nth-child(2),
+.ticket-detail .receipt-table td:nth-child(2) {
+  width: 3.5rem;
+}
+
+.ticket-detail .receipt-table th:nth-child(3),
+.ticket-detail .receipt-table td:nth-child(3),
+.ticket-detail .receipt-table th:nth-child(4),
+.ticket-detail .receipt-table td:nth-child(4) {
+  width: 6.5rem;
+}
+
+.ticket-detail .receipt-table td:nth-child(2),
+.ticket-detail .receipt-table td:nth-child(3),
+.ticket-detail .receipt-table td:nth-child(4) {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.ticket-detail .receipt-table th:nth-child(2),
+.ticket-detail .receipt-table th:nth-child(3),
+.ticket-detail .receipt-table th:nth-child(4) {
+  text-align: right;
+}
+
+.ticket-detail .receipt-total {
+  font-weight: 700;
+  margin-top: 0.5rem;
+}
+
+@media print {
+  .shell > .sidebar {
+    display: none !important;
+  }
+
+  .shell > main {
+    padding: 0;
+    overflow: visible;
+  }
+
+  .ticket-detail .detail-header,
+  .ticket-detail .detail-stepper,
+  .ticket-detail .detail-grid,
+  .ticket-detail .receipt-no-print {
+    display: none !important;
+  }
+
+  /* The dialog renders in an overlay mask. Flatten it so only the receipt prints. */
+  .ticket-detail .p-dialog-mask {
+    position: static !important;
+    background: none !important;
+    display: block !important;
+  }
+
+  .ticket-detail .p-dialog {
+    position: static !important;
+    width: 100% !important;
+    max-height: none !important;
+    margin: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .ticket-detail .p-dialog-header {
+    display: none !important;
+  }
+
+  .ticket-detail .p-dialog-content {
+    overflow: visible !important;
+    max-height: none !important;
+    padding: 0 !important;
+  }
+
+  .ticket-detail .receipt-content {
+    color: #000;
+  }
+}

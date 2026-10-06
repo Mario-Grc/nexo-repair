@@ -56,6 +56,14 @@ public class TicketController {
         ticketService.addNote(publicId, principal.employeeId(), dto.text());
     }
 
+    // No principal needed. Description edits carry no audit trail by design.
+    // Auth is still enforced by SecurityConfig anyRequest().authenticated().
+    @PatchMapping("/{publicId}/details")
+    public TicketDto updateDetails(@PathVariable UUID publicId,
+                                   @Valid @RequestBody UpdateTicketDetailsDto dto) {
+        return ticketService.updateDetails(publicId, dto.problemDescription());
+    }
+
     @GetMapping("/{publicId}/timeline")
     public List<TimelineEntryDto> getTimeline(@PathVariable UUID publicId) {
         return ticketService.getTimeline(publicId);

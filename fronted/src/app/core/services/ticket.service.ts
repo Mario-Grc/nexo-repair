@@ -34,6 +34,10 @@ export class TicketService {
     return this.http.patch<Ticket>(`${this.baseUrl}/${publicId}/status`, dto);
   }
 
+  updateDetails(publicId: string, dto: { problemDescription: string }): Observable<Ticket> {
+    return this.http.patch<Ticket>(`${this.baseUrl}/${publicId}/details`, dto);
+  }
+
   addNote(publicId: string, dto: { text: string }): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/${publicId}/notes`, dto);
   }

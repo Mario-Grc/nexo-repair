@@ -57,7 +57,9 @@ export class StatusChangeDialog {
   onOpen(): void {
     const config = this.noteConfig();
     const control = this.form.controls.note;
-    control.setValidators(config.required ? [Validators.required, nonBlankText] : null);
+    control.setValidators(
+      config.required ? [Validators.required, Validators.maxLength(255), nonBlankText] : [Validators.maxLength(255)],
+    );
     control.updateValueAndValidity();
     this.form.reset({ note: '' });
     this.justConfirmed = false;

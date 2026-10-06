@@ -4,6 +4,7 @@ import com.nexo.backend.dto.*;
 import com.nexo.backend.exception.InvalidStatusTransitionException;
 import com.nexo.backend.exception.NoteRequiredException;
 import com.nexo.backend.exception.ResourceNotFoundException;
+import com.nexo.backend.exception.TicketClosedException;
 import com.nexo.backend.model.*;
 import com.nexo.backend.repository.*;
 import org.springframework.stereotype.Service;
@@ -140,6 +141,28 @@ public class TicketService {
         note.setAuthor(author);
         note.setText(text);
         noteRepository.save(note);
+    }
+
+    @Transactional
+    public TicketDto updateDetails(UUID publicId, String problemDescription) {
+        Ticket ticket = findTicketOrThrow(publicId);
+        // Closed tickets keep their final description
+        // so edits are rejected with a conflict.
+        if (ticket.getStatus().isClosed()) {
+            throw new TicketClosedException();
+        }
+        // Defense in depth. The controller already validates
+        // the input but direct service calls must also fail fast.
+        if (problemDescription == null || problemDescription.isBlank()) {
+            throw new IllegalArgumentException("Problem description is required");
+        }
+        String trimmed = problemDescription.trim();
+        if (trimmed.length() > 500) {
+            throw new IllegalArgumentException("Problem description must be at most 500 characters");
+        }
+        // Store the trimmed value so extra spaces never reach the database.
+        ticket.setProblemDescription(trimmed);
+        return toDto(ticketRepository.save(ticket));
     }
 
     public List<TimelineEntryDto> getTimeline(UUID publicId) {

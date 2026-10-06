@@ -15,6 +15,7 @@
         title="Back to tickets"
         severity="secondary"
       ></a>
+      <p-button label="Print receipt" icon="pi pi-print" severity="secondary" (onClick)="openReceipt()" />
       @if (primaryStatus(); as next) {
         @if (splitButtonItems().length === 0) {
           <p-button [label]="'Mark as ' + statusLabels[next]" (onClick)="changeStatus(next)" />
@@ -33,7 +34,20 @@
 
   <div class="detail-grid">
     <section class="main-column">
-      <p-card header="Problem">
+      <p-card>
+        <div class="problem-title-row">
+          <h3>Problem</h3>
+          @if (!t.closed) {
+            <p-button
+              icon="pi pi-pencil"
+              [text]="true"
+              size="small"
+              aria-label="Edit description"
+              title="Edit description"
+              (onClick)="descriptionDialogVisible.set(true)"
+            />
+          }
+        </div>
         <p>{{ t.problemDescription }}</p>
       </p-card>
 
@@ -98,6 +112,9 @@
                 <div class="timeline-body">
                   <strong>{{ entry.authorName }}</strong>
                   <p-tag [value]="statusLabels[entry.newStatus]" [severity]="statusSeverity[entry.newStatus]" />
+                  @if (entry.note) {
+                    <p class="status-note">{{ entry.note }}</p>
+                  }
                 </div>
                 <time>{{ entry.occurredAt | date:'dd/MM/yyyy, HH:mm' }}</time>
               </div>
@@ -194,6 +211,119 @@
     (visibleChange)="partDialogVisible.set($event)"
     (saved)="onPartSaved()"
   />
+  <app-edit-description-dialog
+    [publicId]="t.publicId"
+    [currentDescription]="t.problemDescription"
+    [visible]="descriptionDialogVisible()"
+    (visibleChange)="descriptionDialogVisible.set($event)"
+    (saved)="onDescriptionSaved($event)"
+  />
+
+  <p-dialog
+    header="Ticket receipt"
+    [visible]="receiptVisible()"
+    (visibleChange)="receiptVisible.set($event)"
+    (onHide)="closeReceipt()"
+    [modal]="true"
+    [dismissableMask]="true"
+    [style]="{ width: 'min(46rem, 92vw)' }"
+    styleClass="receipt-dialog"
+  >
+    <div class="receipt-toolbar receipt-no-print">
+      <fieldset class="receipt-options">
+        <legend>History</legend>
+        <label>
+          <input type="radio" name="receipt-history" [checked]="receiptMode() === 'none'" (change)="receiptMode.set('none')" />
+          No history
+        </label>
+        <label>
+          <input type="radio" name="receipt-history" [checked]="receiptMode() === 'status'" (change)="receiptMode.set('status')" />
+          Status changes only
+        </label>
+        <label>
+          <input type="radio" name="receipt-history" [checked]="receiptMode() === 'all'" (change)="receiptMode.set('all')" />
+          Status and notes
+        </label>
+      </fieldset>
+      <div class="receipt-toolbar-actions">
+        <p-button label="Print" icon="pi pi-print" (onClick)="printReceipt()" />
+      </div>
+    </div>
+
+    <div class="receipt-content">
+      <header class="receipt-shop">
+        <h2>Nexo Repair Shop</h2>
+        <p>Ticket {{ shortId() }}, {{ t.createdAt | date:'dd/MM/yyyy' }}, {{ statusLabels[t.status] }}</p>
+      </header>
+
+      <section>
+        <h3>Customer</h3>
+        <p>{{ t.customerName }}</p>
+        <p>{{ customer()?.email || '-' }}</p>
+        <p>{{ customer()?.phone || '-' }}</p>
+      </section>
+
+      <section>
+        <h3>Device</h3>
+        <p>{{ deviceTypeLabels[t.device.type] }}, {{ t.device.brand }} {{ t.device.model }}</p>
+        <p>Identifier: {{ t.device.identifier || '-' }}</p>
+      </section>
+
+      <section>
+        <h3>Problem</h3>
+        <p>{{ t.problemDescription }}</p>
+      </section>
+
+      <section>
+        <h3>Parts</h3>
+        @if (parts().length > 0) {
+          <table class="receipt-table">
+            <thead>
+              <tr><th>Description</th><th>Qty</th><th>Price</th><th>Total</th></tr>
+            </thead>
+            <tbody>
+              @for (part of parts(); track part.id) {
+                <tr>
+                  <td>{{ part.description }}</td>
+                  <td>{{ part.quantity }}</td>
+                  <td>{{ part.unitPrice != null ? (part.unitPrice | currency:'EUR') : '-' }}</td>
+                  <td>{{ part.lineTotal != null ? (part.lineTotal | currency:'EUR') : '-' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+          @if (partsTotal() !== null) {
+            <p class="receipt-total">Total with price: {{ partsTotal() | currency:'EUR' }}</p>
+          }
+        } @else {
+          <p>No parts added yet.</p>
+        }
+      </section>
+
+      @if (closingSummary(); as summary) {
+        <section>
+          <h3>Closing summary</h3>
+          <p>{{ summary }}</p>
+        </section>
+      }
+
+      @if (receiptHistory().length > 0) {
+        <section>
+          <h3>History</h3>
+          @for (entry of receiptHistory(); track $index) {
+            @switch (entry.type) {
+              @case ('STATUS_CHANGE') {
+                <p>{{ entry.authorName }} marked {{ statusLabels[entry.newStatus] }} on {{ entry.occurredAt | date:'dd/MM/yyyy, HH:mm' }}@if (entry.note) {: {{ entry.note }}}</p>
+              }
+              @case ('NOTE') {
+                <p>{{ entry.authorName }} wrote on {{ entry.occurredAt | date:'dd/MM/yyyy, HH:mm' }}: {{ entry.text }}</p>
+              }
+            }
+          }
+        </section>
+      }
+    </div>
+  </p-dialog>
 } @else {
   <p>Loading ticket…</p>
 }

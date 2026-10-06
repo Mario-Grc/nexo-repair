@@ -1,0 +1,21 @@
+<p-dialog header="Edit description" [(visible)]="visible" (onShow)="onOpen()" [modal]="true" [style]="{ width: '420px' }">
+  <form [formGroup]="form" (ngSubmit)="save()" class="dialog-form">
+    <label for="edit-description-text">
+      <span>Problem description <span class="required-marker" aria-hidden="true">*</span></span>
+      <textarea id="edit-description-text" pTextarea formControlName="problemDescription" rows="4" required maxlength="500"></textarea>
+    </label>
+    @if (form.controls.problemDescription.touched && form.controls.problemDescription.hasError('required')) {
+      <p class="error" role="alert">A description is required.</p>
+    }
+    @if (form.controls.problemDescription.touched && form.controls.problemDescription.hasError('maxlength')) {
+      <p class="error" role="alert">The description cannot exceed 500 characters.</p>
+    }
+    @if (saveError() != null) {
+      <p class="error" role="alert">{{ saveError() }}</p>
+    }
+    <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+      <p-button type="button" label="Cancel" severity="secondary" (onClick)="visible.set(false)" />
+      <p-button type="submit" label="Save" [disabled]="form.invalid || isSaving()" />
+    </div>
+  </form>
+</p-dialog>

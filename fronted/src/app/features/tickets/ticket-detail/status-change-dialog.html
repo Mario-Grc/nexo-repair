@@ -10,6 +10,9 @@
     @if (form.controls.note.touched && form.controls.note.hasError('required')) {
       <p class="error" role="alert">A note is required for this status.</p>
     }
+    @if (form.controls.note.touched && form.controls.note.hasError('maxlength')) {
+      <p class="error" role="alert">The note cannot exceed 255 characters.</p>
+    }
     <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
       <p-button type="button" label="Cancel" severity="secondary" (onClick)="cancel()" />
       <p-button type="submit" [label]="confirmLabel()" [severity]="isDanger() ? 'danger' : undefined" [disabled]="form.invalid" />

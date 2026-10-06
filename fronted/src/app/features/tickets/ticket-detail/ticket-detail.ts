@@ -1,12 +1,13 @@
 import { Component, OnInit, ViewEncapsulation, computed, inject, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { SplitButtonModule } from 'primeng/splitbutton';
 import { StepsModule } from 'primeng/steps';
 import { CardModule } from 'primeng/card';
+import { DialogModule } from 'primeng/dialog';
 import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { MessageModule } from 'primeng/message';
@@ -24,10 +25,11 @@ import { DEVICE_TYPE_LABELS } from '../../../core/models/device-type';
 import { STEPPER_ORDER, getStepperIndex } from './stepper-index';
 import { StatusChangeDialog } from './status-change-dialog';
 import { AddPartDialog } from './add-part-dialog';
+import { EditDescriptionDialog } from './edit-description-dialog';
 
 @Component({
   selector: 'app-ticket-detail',
-  imports: [RouterLink, DatePipe, CurrencyPipe, ReactiveFormsModule, TagModule, ButtonModule, SplitButtonModule, StepsModule, CardModule, SelectModule, TextareaModule, MessageModule, TableModule, StatusChangeDialog, AddPartDialog],
+  imports: [RouterLink, DatePipe, CurrencyPipe, ReactiveFormsModule, TagModule, ButtonModule, SplitButtonModule, StepsModule, CardModule, DialogModule, SelectModule, TextareaModule, MessageModule, TableModule, StatusChangeDialog, AddPartDialog, EditDescriptionDialog],
   templateUrl: './ticket-detail.html',
   styleUrl: './ticket-detail.css',
   // Required to theme PrimeNG internals. All rules stay under .ticket-detail.
@@ -51,6 +53,9 @@ export class TicketDetail implements OnInit {
   pendingStatus = signal<TicketStatus | null>(null);
   statusDialogVisible = signal(false);
   partDialogVisible = signal(false);
+  descriptionDialogVisible = signal(false);
+  receiptVisible = signal(false);
+  receiptMode = signal<'none' | 'status' | 'all'>('status');
   error = signal<string | null>(null);
   // The technician selection is staged and saved only when Save is clicked.
   assignDirty = signal(false);
@@ -78,9 +83,27 @@ export class TicketDetail implements OnInit {
     { name: 'Unassigned', id: null as number | null },
     ...this.technicians().map(t => ({ name: t.name, id: t.id as number | null })),
   ]);
+  // Latest closing note, either the repair summary or the cancellation reason.
+  closingSummary = computed(() => {
+    const entries = this.timeline();
+    for (let i = entries.length - 1; i >= 0; i--) {
+      const entry = entries[i];
+      if (entry.type === 'STATUS_CHANGE' && (entry.newStatus === 'COMPLETED' || entry.newStatus === 'CANCELLED') && entry.note)
+        return entry.note;
+    }
+    return null;
+  });
+  // Timeline subset shown on the receipt, driven by the history option.
+  receiptHistory = computed(() => {
+    const mode = this.receiptMode();
+    if (mode === 'none') return [];
+    const entries = this.timeline();
+    if (mode === 'status') return entries.filter(entry => entry.type === 'STATUS_CHANGE');
+    return entries.filter(entry => entry.type === 'STATUS_CHANGE' || entry.type === 'NOTE');
+  });
 
   noteForm = this.fb.nonNullable.group({
-    text: ['', [Validators.required, Validators.maxLength(500)]],
+    text: ['', [Validators.required, Validators.maxLength(500), nonBlankText]],
   });
 
   assignControl = this.fb.control<number | null>(null);
@@ -160,6 +183,10 @@ export class TicketDetail implements OnInit {
     this.loadTimeline();
   }
 
+  onDescriptionSaved(updated: Ticket): void {
+    this.ticket.set(updated);
+  }
+
   removePart(partId: number): void {
     this.ticketService.removePart(this.publicId, partId).subscribe({
       next: () => {
@@ -195,4 +222,23 @@ export class TicketDetail implements OnInit {
       this.loadTimeline();
     });
   }
+
+  openReceipt(): void {
+    this.receiptMode.set('status');
+    this.receiptVisible.set(true);
+  }
+
+  closeReceipt(): void {
+    this.receiptVisible.set(false);
+  }
+
+  printReceipt(): void {
+    window.print();
+  }
+}
+
+// Whitespace only counts as blank, so the save button stays disabled.
+function nonBlankText(control: AbstractControl): ValidationErrors | null {
+  const value = control.value;
+  return typeof value === 'string' && value.trim() === '' ? { required: true } : null;
 }
