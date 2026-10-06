@@ -4,15 +4,18 @@ import com.nexo.backend.model.TicketStatus;
 
 import java.time.Instant;
 
+// type is a record component so Jackson serializes it without annotations.
+// The short constructor keeps the usual call sites readable.
 public record StatusChangeEntryDto(
         Instant occurredAt,
         String authorName,
         TicketStatus previousStatus,
         TicketStatus newStatus,
-        String note
+        String note,
+        String type
 ) implements TimelineEntryDto {
-    @Override
-    public String type() {
-        return "STATUS_CHANGE";
+    public StatusChangeEntryDto(Instant occurredAt, String authorName,
+                                TicketStatus previousStatus, TicketStatus newStatus, String note) {
+        this(occurredAt, authorName, previousStatus, newStatus, note, "STATUS_CHANGE");
     }
 }

@@ -79,6 +79,22 @@ npm start # same as `ng serve`, but uses the project's local CLI
 
 Runs at `http://localhost:4200`.
 
+### Tests
+
+Backend:
+
+```bash
+cd backend
+./mvnw test
+```
+
+Frontend:
+
+```bash
+cd fronted
+npm test
+```
+
 ### Deployment
 
 TBD.

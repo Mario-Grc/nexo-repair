@@ -77,7 +77,7 @@ class TicketControllerTest {
         return new TicketDto(publicId, "Screen stays black",
                 new DeviceDto(DeviceType.LAPTOP, "Lenovo", "T14", "SN1"),
                 TicketStatus.PENDING, 1L, "Juan", null, null, Instant.now(),
-                List.of(TicketStatus.IN_PROGRESS, TicketStatus.CANCELLED));
+                List.of(TicketStatus.IN_PROGRESS, TicketStatus.CANCELLED), false);
     }
 
     @Test

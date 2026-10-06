@@ -123,6 +123,22 @@
   margin-top: 0.5rem;
 }
 
+.ticket-detail .parts-total {
+  font-weight: 700;
+  margin-top: 0.75rem;
+}
+
+.ticket-detail .parts-hint {
+  color: var(--p-surface-500, #6b7280);
+  font-size: 0.875rem;
+}
+
+.ticket-detail .parts-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.5rem;
+}
+
 .ticket-detail .timeline-row {
   display: flex;
   align-items: flex-start;

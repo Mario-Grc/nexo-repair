@@ -6,5 +6,10 @@ public enum TicketStatus {
     WAITING_FOR_PARTS,
     COMPLETED,
     DELIVERED,
-    CANCELLED,
+    CANCELLED;
+
+    // Single source of truth. Closed tickets accept no parts changes.
+    public boolean isClosed() {
+        return this == DELIVERED || this == CANCELLED;
+    }
 }

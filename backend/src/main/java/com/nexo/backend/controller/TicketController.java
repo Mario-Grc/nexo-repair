@@ -2,6 +2,7 @@ package com.nexo.backend.controller;
 
 import com.nexo.backend.dto.*;
 import com.nexo.backend.security.EmployeePrincipal;
+import com.nexo.backend.service.TicketPartService;
 import com.nexo.backend.service.TicketService;
 import jakarta.validation.Valid;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -15,9 +16,11 @@ import java.util.UUID;
 public class TicketController {
 
     private final TicketService ticketService;
+    private final TicketPartService partService;
 
-    public TicketController(TicketService ticketService) {
+    public TicketController(TicketService ticketService, TicketPartService partService) {
         this.ticketService = ticketService;
+        this.partService = partService;
     }
 
     @GetMapping
@@ -56,5 +59,22 @@ public class TicketController {
     @GetMapping("/{publicId}/timeline")
     public List<TimelineEntryDto> getTimeline(@PathVariable UUID publicId) {
         return ticketService.getTimeline(publicId);
+    }
+
+    @GetMapping("/{publicId}/parts")
+    public PartsDto getParts(@PathVariable UUID publicId) {
+        return partService.list(publicId);
+    }
+
+    @PostMapping("/{publicId}/parts")
+    public TicketPartDto addPart(@PathVariable UUID publicId, @Valid @RequestBody AddPartDto dto,
+                                 @AuthenticationPrincipal EmployeePrincipal principal) {
+        return partService.add(publicId, dto, principal.employeeId());
+    }
+
+    @DeleteMapping("/{publicId}/parts/{partId}")
+    public void removePart(@PathVariable UUID publicId, @PathVariable Long partId,
+                           @AuthenticationPrincipal EmployeePrincipal principal) {
+        partService.remove(publicId, partId, principal.employeeId());
     }
 }

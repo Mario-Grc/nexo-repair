@@ -2,13 +2,15 @@ package com.nexo.backend.dto;
 
 import java.time.Instant;
 
+// type is a record component so Jackson serializes it without annotations.
+// The short constructor keeps the usual call sites readable.
 public record NoteEntryDto(
         Instant occurredAt,
         String authorName,
-        String text
+        String text,
+        String type
 ) implements TimelineEntryDto {
-    @Override
-    public String type() {
-        return "NOTE";
+    public NoteEntryDto(Instant occurredAt, String authorName, String text) {
+        this(occurredAt, authorName, text, "NOTE");
     }
 }

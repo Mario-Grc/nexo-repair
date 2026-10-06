@@ -1,0 +1,18 @@
+<p-dialog [header]="dialogHeader()" [(visible)]="visible" (onShow)="onOpen()" (onHide)="onHide()" [modal]="true" [style]="{ width: '420px' }">
+  <form [formGroup]="form" (ngSubmit)="confirm()" class="dialog-form">
+    @if (hint() != null) {
+      <p>{{ hint() }}</p>
+    }
+    <label for="status-change-note">
+      <span>{{ noteConfig().label }} @if (noteConfig().required) { <span class="required-marker" aria-hidden="true">*</span> }</span>
+      <textarea id="status-change-note" pTextarea formControlName="note" rows="3" maxlength="255" [required]="noteConfig().required"></textarea>
+    </label>
+    @if (form.controls.note.touched && form.controls.note.hasError('required')) {
+      <p class="error" role="alert">A note is required for this status.</p>
+    }
+    <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+      <p-button type="button" label="Cancel" severity="secondary" (onClick)="cancel()" />
+      <p-button type="submit" [label]="confirmLabel()" [severity]="isDanger() ? 'danger' : undefined" [disabled]="form.invalid" />
+    </div>
+  </form>
+</p-dialog>

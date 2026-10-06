@@ -2,6 +2,7 @@ package com.nexo.backend.service;
 
 import com.nexo.backend.dto.*;
 import com.nexo.backend.exception.InvalidStatusTransitionException;
+import com.nexo.backend.exception.NoteRequiredException;
 import com.nexo.backend.exception.ResourceNotFoundException;
 import com.nexo.backend.model.*;
 import com.nexo.backend.repository.*;
@@ -24,25 +25,30 @@ public class TicketService {
             TicketStatus.CANCELLED, List.of()
     );
 
+    private static final Set<TicketStatus> NOTE_REQUIRED = EnumSet.of(TicketStatus.COMPLETED, TicketStatus.CANCELLED);
+
     private final TicketRepository ticketRepository;
     private final CustomerRepository customerRepository;
     private final EmployeeRepository employeeRepository;
     private final TicketStatusChangeRepository statusChangeRepository;
     private final TicketNoteRepository noteRepository;
     private final TicketAssignmentChangeRepository assignmentChangeRepository;
+    private final TicketPartRepository partRepository;
 
     public TicketService(TicketRepository ticketRepository,
                          CustomerRepository customerRepository,
                          EmployeeRepository employeeRepository,
                          TicketStatusChangeRepository statusChangeRepository,
                          TicketNoteRepository noteRepository,
-                         TicketAssignmentChangeRepository assignmentChangeRepository) {
+                         TicketAssignmentChangeRepository assignmentChangeRepository,
+                         TicketPartRepository partRepository) {
         this.ticketRepository = ticketRepository;
         this.customerRepository = customerRepository;
         this.employeeRepository = employeeRepository;
         this.statusChangeRepository = statusChangeRepository;
         this.noteRepository = noteRepository;
         this.assignmentChangeRepository = assignmentChangeRepository;
+        this.partRepository = partRepository;
     }
 
     public List<TicketDto> getAllTickets(Long customerId) {
@@ -108,11 +114,18 @@ public class TicketService {
             throw new InvalidStatusTransitionException(ticket.getStatus(), newStatus);
         }
 
+        // The transition comes first. An unknown transition stays invalid
+        // even when the note is also missing.
+        String cleanNote = (note == null || note.isBlank()) ? null : note.trim();
+        if (cleanNote == null && NOTE_REQUIRED.contains(newStatus)) {
+            throw new NoteRequiredException(newStatus);
+        }
+
         TicketStatus previous = ticket.getStatus();
         ticket.setStatus(newStatus);
         ticketRepository.save(ticket);
 
-        recordStatusChange(ticket, previous, newStatus, changedBy, note);
+        recordStatusChange(ticket, previous, newStatus, changedBy, cleanNote);
 
         return toDto(ticket);
     }
@@ -144,6 +157,14 @@ public class TicketService {
                         c.getChangedAt(), c.getChangedBy().getName(),
                         c.getPreviousEmployee() != null ? c.getPreviousEmployee().getName() : null,
                         c.getNewEmployee() != null ? c.getNewEmployee().getName() : null)));
+        partRepository.findByTicketOrderByAddedAtAsc(ticket).forEach(p -> {
+            entries.add(new PartEntryDto(p.getAddedAt(), p.getAddedBy().getName(),
+                    "PART_ADDED", p.getDescription(), p.getQuantity()));
+            if (p.isRemoved()) {
+                entries.add(new PartEntryDto(p.getRemovedAt(), p.getRemovedBy().getName(),
+                        "PART_REMOVED", p.getDescription(), p.getQuantity()));
+            }
+        });
 
         entries.sort(Comparator.comparing(TimelineEntryDto::occurredAt));
         return entries;
@@ -184,7 +205,8 @@ public class TicketService {
                 ticket.getAssignedEmployee() != null ? ticket.getAssignedEmployee().getId() : null,
                 ticket.getAssignedEmployee() != null ? ticket.getAssignedEmployee().getName() : null,
                 ticket.getCreatedAt(),
-                List.copyOf(ALLOWED_TRANSITIONS.get(ticket.getStatus()))
+                List.copyOf(ALLOWED_TRANSITIONS.get(ticket.getStatus())),
+                ticket.getStatus().isClosed()
         );
     }
 

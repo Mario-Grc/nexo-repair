@@ -1,60 +1,36 @@
 import { Component, OnInit, ViewEncapsulation, computed, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
+import { CurrencyPipe, DatePipe } from '@angular/common';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TagModule } from 'primeng/tag';
 import { ButtonModule } from 'primeng/button';
 import { SplitButtonModule } from 'primeng/splitbutton';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { StepsModule } from 'primeng/steps';
 import { CardModule } from 'primeng/card';
 import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { MessageModule } from 'primeng/message';
-import { MenuItem, ConfirmationService } from 'primeng/api';
+import { TableModule } from 'primeng/table';
+import { MenuItem } from 'primeng/api';
 import { TicketService } from '../../../core/services/ticket.service';
 import { CustomerService } from '../../../core/services/customer.service';
 import { AssignableTechnician, EmployeeService } from '../../../core/services/employee.service';
 import { Ticket } from '../../../core/models/ticket';
+import { TicketPart } from '../../../core/models/ticket-part';
 import { TicketStatus, TICKET_STATUS_LABELS, TICKET_STATUS_SEVERITY } from '../../../core/models/ticket-status';
 import { TimelineEntry } from '../../../core/models/timeline-entry';
 import { Customer } from '../../../core/models/customer';
 import { DEVICE_TYPE_LABELS } from '../../../core/models/device-type';
 import { STEPPER_ORDER, getStepperIndex } from './stepper-index';
-
-// One-way transitions: COMPLETED cannot return to IN_PROGRESS, while DELIVERED
-// and CANCELLED are terminal states. Only these statuses require confirmation.
-const CONFIRM_STATUSES: TicketStatus[] = ['COMPLETED', 'DELIVERED', 'CANCELLED'];
-
-const CONFIRM_COPY: Record<TicketStatus, { header: string; message: string; acceptLabel: string; danger?: boolean }> = {
-  PENDING: { header: '', message: '', acceptLabel: '' },
-  IN_PROGRESS: { header: '', message: '', acceptLabel: '' },
-  WAITING_FOR_PARTS: { header: '', message: '', acceptLabel: '' },
-  COMPLETED: {
-    header: 'Mark as Completed?',
-    message: 'Once completed, the ticket can only be delivered. It cannot go back to In progress.',
-    acceptLabel: 'Mark completed',
-  },
-  DELIVERED: {
-    header: 'Mark as Delivered?',
-    message: 'This closes the ticket permanently. Continue?',
-    acceptLabel: 'Mark delivered',
-  },
-  CANCELLED: {
-    header: 'Cancel ticket?',
-    message: 'The ticket will be removed from the flow permanently. Continue?',
-    acceptLabel: 'Cancel ticket',
-    danger: true,
-  },
-};
+import { StatusChangeDialog } from './status-change-dialog';
+import { AddPartDialog } from './add-part-dialog';
 
 @Component({
   selector: 'app-ticket-detail',
-  imports: [RouterLink, DatePipe, ReactiveFormsModule, TagModule, ButtonModule, SplitButtonModule, ConfirmDialogModule, StepsModule, CardModule, SelectModule, TextareaModule, MessageModule],
+  imports: [RouterLink, DatePipe, CurrencyPipe, ReactiveFormsModule, TagModule, ButtonModule, SplitButtonModule, StepsModule, CardModule, SelectModule, TextareaModule, MessageModule, TableModule, StatusChangeDialog, AddPartDialog],
   templateUrl: './ticket-detail.html',
   styleUrl: './ticket-detail.css',
-  providers: [ConfirmationService],
-  // Required to theme PrimeNG internals; CSS rules are scoped under .ticket-detail.
+  // Required to theme PrimeNG internals. All rules stay under .ticket-detail.
   encapsulation: ViewEncapsulation.None,
 })
 export class TicketDetail implements OnInit {
@@ -62,7 +38,6 @@ export class TicketDetail implements OnInit {
   private ticketService = inject(TicketService);
   private customerService = inject(CustomerService);
   private employeeService = inject(EmployeeService);
-  private confirm = inject(ConfirmationService);
   private fb = inject(FormBuilder);
 
   private publicId = '';
@@ -71,6 +46,11 @@ export class TicketDetail implements OnInit {
   timeline = signal<TimelineEntry[]>([]);
   customer = signal<Customer | null>(null);
   technicians = signal<AssignableTechnician[]>([]);
+  parts = signal<TicketPart[]>([]);
+  partsTotal = signal<number | null>(null);
+  pendingStatus = signal<TicketStatus | null>(null);
+  statusDialogVisible = signal(false);
+  partDialogVisible = signal(false);
   error = signal<string | null>(null);
   // The technician selection is staged and saved only when Save is clicked.
   assignDirty = signal(false);
@@ -114,6 +94,7 @@ export class TicketDetail implements OnInit {
     this.publicId = publicId;
     this.loadTicket();
     this.loadTimeline();
+    this.loadParts();
     this.employeeService.getAssignableTechnicians().subscribe(list => this.technicians.set(list));
   }
 
@@ -137,32 +118,56 @@ export class TicketDetail implements OnInit {
     this.customerService.getCustomer(customerId).subscribe(c => this.customer.set(c));
   }
 
-  changeStatus(status: TicketStatus): void {
-    if (CONFIRM_STATUSES.includes(status)) {
-      const copy = CONFIRM_COPY[status];
-      this.confirm.confirm({
-        header: copy.header,
-        message: copy.message,
-        icon: 'pi pi-exclamation-triangle',
-        acceptLabel: copy.acceptLabel,
-        acceptButtonStyleClass: copy.danger ? 'p-button-danger' : undefined,
-        rejectButtonStyleClass: 'p-button-text',
-        accept: () => this.doChangeStatus(status),
-      });
-      return;
-    }
-    this.doChangeStatus(status);
+  loadParts(): void {
+    this.ticketService.getParts(this.publicId).subscribe(response => {
+      this.parts.set(response.items);
+      this.partsTotal.set(response.total);
+    });
   }
 
-  private doChangeStatus(status: TicketStatus): void {
+  changeStatus(status: TicketStatus): void {
+    this.pendingStatus.set(status);
+    this.statusDialogVisible.set(true);
+  }
+
+  onStatusConfirmed(note: string | null): void {
+    const status = this.pendingStatus();
+    this.pendingStatus.set(null);
+    if (!status) return;
+    this.doChangeStatus(status, note);
+  }
+
+  onStatusDialogClosed(): void {
+    this.pendingStatus.set(null);
+  }
+
+  private doChangeStatus(status: TicketStatus, note: string | null): void {
     const ticket = this.ticket();
     if (!ticket) return;
     this.ticketService
-      .changeStatus(this.publicId, { newStatus: status, note: null })
-      .subscribe(updated => {
-        this.ticket.set(updated);
-        this.loadTimeline();
+      .changeStatus(this.publicId, { newStatus: status, note })
+      .subscribe({
+        next: updated => {
+          this.ticket.set(updated);
+          this.loadTimeline();
+        },
+        error: e => this.error.set(e.status === 400 ? 'A note is required for this status.' : 'Could not change the status.'),
       });
+  }
+
+  onPartSaved(): void {
+    this.loadParts();
+    this.loadTimeline();
+  }
+
+  removePart(partId: number): void {
+    this.ticketService.removePart(this.publicId, partId).subscribe({
+      next: () => {
+        this.loadParts();
+        this.loadTimeline();
+      },
+      error: e => this.error.set(e.status === 409 ? 'The ticket is closed.' : 'Could not remove the part.'),
+    });
   }
 
   onAssignStaged(): void {

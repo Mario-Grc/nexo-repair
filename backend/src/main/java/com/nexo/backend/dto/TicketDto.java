@@ -16,5 +16,6 @@ public record TicketDto(
         Long assignedEmployeeId,
         String assignedEmployeeName,
         Instant createdAt,
-        List<TicketStatus> allowedNextStatuses
+        List<TicketStatus> allowedNextStatuses,
+        boolean closed
 ) {}

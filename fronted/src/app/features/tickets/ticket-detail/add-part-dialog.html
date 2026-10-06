@@ -1,0 +1,32 @@
+<p-dialog header="Add part" [(visible)]="visible" (onShow)="onOpen()" [modal]="true" [style]="{ width: '420px' }">
+  <form [formGroup]="form" (ngSubmit)="save()" class="dialog-form">
+    <label for="part-description">
+      <span>Description <span class="required-marker" aria-hidden="true">*</span></span>
+      <input id="part-description" pInputText formControlName="description" required maxlength="200" autocomplete="off" />
+    </label>
+    <label for="part-quantity">
+      <span>Quantity <span class="required-marker" aria-hidden="true">*</span></span>
+      <p-inputnumber inputId="part-quantity" formControlName="quantity" [showButtons]="true" [style]="{ width: '100%' }" [inputStyle]="{ width: '100%' }" />
+    </label>
+    <label for="part-price">
+      <span>Unit price (optional)</span>
+      <p-inputnumber
+        inputId="part-price"
+        formControlName="unitPrice"
+        mode="currency"
+        currency="EUR"
+        locale="es-ES"
+        placeholder="No price yet"
+        [style]="{ width: '100%' }"
+        [inputStyle]="{ width: '100%' }"
+      />
+    </label>
+    @if (saveError() != null) {
+      <p class="error" role="alert">{{ saveError() }}</p>
+    }
+    <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+      <p-button type="button" label="Cancel" severity="secondary" (onClick)="visible.set(false)" />
+      <p-button type="submit" label="Add part" [disabled]="form.invalid || isSaving()" />
+    </div>
+  </form>
+</p-dialog>

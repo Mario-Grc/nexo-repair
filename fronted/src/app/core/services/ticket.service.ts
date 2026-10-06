@@ -3,6 +3,7 @@ import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { NewTicket, Ticket } from '../models/ticket';
 import { TicketStatus } from '../models/ticket-status';
+import { NewPart, PartsResponse, TicketPart } from '../models/ticket-part';
 import { TimelineEntry } from '../models/timeline-entry';
 import { environment } from '../../../environments/environment';
 
@@ -39,5 +40,17 @@ export class TicketService {
 
   getTimeline(publicId: string): Observable<TimelineEntry[]> {
     return this.http.get<TimelineEntry[]>(`${this.baseUrl}/${publicId}/timeline`);
+  }
+
+  getParts(publicId: string): Observable<PartsResponse> {
+    return this.http.get<PartsResponse>(`${this.baseUrl}/${publicId}/parts`);
+  }
+
+  addPart(publicId: string, part: NewPart): Observable<TicketPart> {
+    return this.http.post<TicketPart>(`${this.baseUrl}/${publicId}/parts`, part);
+  }
+
+  removePart(publicId: string, partId: number): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/${publicId}/parts/${partId}`);
   }
 }

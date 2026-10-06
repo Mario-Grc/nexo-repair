@@ -20,6 +20,7 @@ import com.nexo.backend.repository.CustomerRepository;
 import com.nexo.backend.repository.EmployeeRepository;
 import com.nexo.backend.repository.TicketAssignmentChangeRepository;
 import com.nexo.backend.repository.TicketNoteRepository;
+import com.nexo.backend.repository.TicketPartRepository;
 import com.nexo.backend.repository.TicketRepository;
 import com.nexo.backend.repository.TicketStatusChangeRepository;
 import org.junit.jupiter.api.Test;
@@ -72,6 +73,8 @@ class TicketServiceTest {
     private TicketNoteRepository noteRepository;
     @Mock
     private TicketAssignmentChangeRepository assignmentChangeRepository;
+    @Mock
+    private TicketPartRepository partRepository;
 
     @InjectMocks
     private TicketService ticketService;
@@ -106,7 +109,9 @@ class TicketServiceTest {
 
         if (allowed) {
             when(ticketRepository.save(any(Ticket.class))).thenAnswer(invocation -> invocation.getArgument(0));
-            TicketDto result = ticketService.changeStatus(publicId, to, 7L, null);
+            // COMPLETED and CANCELLED require a note since the closing rule.
+            String note = (to == COMPLETED || to == CANCELLED) ? "Closing note" : null;
+            TicketDto result = ticketService.changeStatus(publicId, to, 7L, note);
 
             assertThat(result.status()).isEqualTo(to);
             assertThat(ticket.getStatus()).isEqualTo(to);
@@ -269,6 +274,7 @@ class TicketServiceTest {
         when(statusChangeRepository.findByTicketOrderByChangedAtAsc(ticket)).thenReturn(List.of(statusChange));
         when(noteRepository.findByTicketOrderByCreatedAtAsc(ticket)).thenReturn(List.of(note));
         when(assignmentChangeRepository.findByTicketOrderByChangedAtAsc(ticket)).thenReturn(List.of(assignment));
+        when(partRepository.findByTicketOrderByAddedAtAsc(ticket)).thenReturn(List.of());
 
         List<TimelineEntryDto> timeline = ticketService.getTimeline(ticket.getPublicId());
 
