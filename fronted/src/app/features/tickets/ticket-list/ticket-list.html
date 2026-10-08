@@ -3,7 +3,65 @@
   <p-button label="New ticket" icon="pi pi-plus" (onClick)="openNew()" />
 </div>
 
-<p-table [value]="tickets()" [paginator]="true" [rows]="10">
+<div class="filter-bar">
+  <label class="filter-field filter-search">
+    <span>Search</span>
+    <input
+      pInputText
+      [formControl]="searchControl"
+      placeholder="Search by customer, brand, model or serial..."
+    />
+  </label>
+  <label class="filter-field">
+    <span>Status</span>
+    <p-multiSelect
+      [options]="statusOptions"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="filters().status"
+      (onChange)="onStatusChange($event.value)"
+      placeholder="All statuses"
+      display="chip"
+    />
+  </label>
+  <label class="filter-field">
+    <span>Technician</span>
+    <p-select
+      [options]="assigneeOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="filters().assignee"
+      (onChange)="onAssigneeChange($event.value)"
+      placeholder="All technicians"
+    />
+  </label>
+  <label class="filter-field">
+    <span>Creation date</span>
+    <p-datepicker
+      selectionMode="range"
+      dateFormat="yy-mm-dd"
+      placeholder="From - to"
+      [showIcon]="true"
+      [showClear]="true"
+      [ngModel]="dateRange()"
+      (ngModelChange)="onDateRangeChange($event)"
+    />
+  </label>
+  <p-button label="Reset" icon="pi pi-filter-slash" severity="secondary" (onClick)="resetFilters()" />
+</div>
+
+<p-table
+  [value]="tickets()"
+  [lazy]="true"
+  [lazyLoadOnInit]="false"
+  [paginator]="true"
+  [rows]="filters().size"
+  [first]="filters().page * filters().size"
+  [totalRecords]="totalElements()"
+  [loading]="loading()"
+  (onPage)="onPage($event)"
+  emptyMessage="No tickets match the current filters."
+>
   <ng-template #header>
     <tr>
       <th>Customer</th>
@@ -24,7 +82,13 @@
   </ng-template>
 </p-table>
 
-<p-dialog header="New ticket" [(visible)]="dialogVisible" [modal]="true" [style]="{ width: '480px' }">
+<p-dialog
+  header="New ticket"
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+>
   <form [formGroup]="form" (ngSubmit)="save()" class="dialog-form">
     <label>
       <span>Customer <span class="required-marker" aria-hidden="true">*</span></span>

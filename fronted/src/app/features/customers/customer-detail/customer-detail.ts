@@ -42,8 +42,8 @@ export class CustomerDetail implements OnInit {
       next: c => this.customer.set(c),
       error: () => this.error.set('Customer not found.'),
     });
-    this.ticketService.getTickets(id).subscribe({
-      next: list => this.tickets.set(list),
+    this.ticketService.getTickets({ customerId: id, size: 100 }).subscribe({
+      next: page => this.tickets.set(page.content),
       error: () => this.tickets.set([]),
     });
   }

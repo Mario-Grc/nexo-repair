@@ -24,8 +24,10 @@ public class TicketController {
     }
 
     @GetMapping
-    public List<TicketDto> getAllTickets(@RequestParam(required = false) Long customerId) {
-        return ticketService.getAllTickets(customerId);
+    public PageResponse<TicketDto> getTickets(TicketFilter filter,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ticketService.getTickets(filter, page, size);
     }
 
     @GetMapping("/{publicId}")

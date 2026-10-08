@@ -6,16 +6,39 @@ import { TicketStatus } from '../models/ticket-status';
 import { NewPart, PartsResponse, TicketPart } from '../models/ticket-part';
 import { TimelineEntry } from '../models/timeline-entry';
 import { environment } from '../../../environments/environment';
+import type { TicketFilters } from '../models/ticket-filters';
+
+export interface PageResponse<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export type TicketQuery = Partial<TicketFilters> & { customerId?: number };
 
 @Injectable({ providedIn: 'root' })
 export class TicketService {
   private http = inject(HttpClient);
   private readonly baseUrl = `${environment.apiUrl}/tickets`;
 
-  getTickets(customerId?: number): Observable<Ticket[]> {
+  getTickets(query: TicketQuery): Observable<PageResponse<Ticket>> {
     let params = new HttpParams();
-    if (customerId != null) params = params.set('customerId', customerId);
-    return this.http.get<Ticket[]>(this.baseUrl, { params });
+    for (const status of query.status ?? []) params = params.append('status', status);
+    if (query.assignee === 'unassigned') {
+      params = params.set('unassigned', 'true');
+    } else if (typeof query.assignee === 'number') {
+      params = params.set('assignedEmployeeId', String(query.assignee));
+    }
+    if (query.createdFrom) params = params.set('createdFrom', query.createdFrom);
+    if (query.createdTo) params = params.set('createdTo', query.createdTo);
+    const q = query.q?.trim();
+    if (q) params = params.set('q', q);
+    if (query.customerId != null) params = params.set('customerId', String(query.customerId));
+    if (query.page != null) params = params.set('page', String(query.page));
+    if (query.size != null) params = params.set('size', String(query.size));
+    return this.http.get<PageResponse<Ticket>>(this.baseUrl, { params });
   }
 
   getTicket(publicId: string): Observable<Ticket> {

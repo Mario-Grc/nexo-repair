@@ -1,15 +1,21 @@
 package com.nexo.backend.service;
 
 import com.nexo.backend.dto.*;
+import com.nexo.backend.exception.InvalidFilterException;
 import com.nexo.backend.exception.InvalidStatusTransitionException;
 import com.nexo.backend.exception.NoteRequiredException;
 import com.nexo.backend.exception.ResourceNotFoundException;
 import com.nexo.backend.exception.TicketClosedException;
 import com.nexo.backend.model.*;
 import com.nexo.backend.repository.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZoneId;
 import java.util.*;
 
 @Service
@@ -35,6 +41,7 @@ public class TicketService {
     private final TicketNoteRepository noteRepository;
     private final TicketAssignmentChangeRepository assignmentChangeRepository;
     private final TicketPartRepository partRepository;
+    private final ZoneId workshopZone;
 
     public TicketService(TicketRepository ticketRepository,
                          CustomerRepository customerRepository,
@@ -42,7 +49,8 @@ public class TicketService {
                          TicketStatusChangeRepository statusChangeRepository,
                          TicketNoteRepository noteRepository,
                          TicketAssignmentChangeRepository assignmentChangeRepository,
-                         TicketPartRepository partRepository) {
+                         TicketPartRepository partRepository,
+                         ZoneId workshopZone) {
         this.ticketRepository = ticketRepository;
         this.customerRepository = customerRepository;
         this.employeeRepository = employeeRepository;
@@ -50,13 +58,29 @@ public class TicketService {
         this.noteRepository = noteRepository;
         this.assignmentChangeRepository = assignmentChangeRepository;
         this.partRepository = partRepository;
+        this.workshopZone = workshopZone;
     }
 
-    public List<TicketDto> getAllTickets(Long customerId) {
-        if (customerId != null) {
-            return ticketRepository.findByCustomerId(customerId).stream().map(this::toDto).toList();
+    @Transactional(readOnly = true)
+    public PageResponse<TicketDto> getTickets(TicketFilter filter, int page, int size) {
+        if (Boolean.TRUE.equals(filter.unassigned()) && filter.assignedEmployeeId() != null) {
+            throw new InvalidFilterException(
+                    "Cannot filter by unassigned and a specific technician at the same time");
         }
-        return ticketRepository.findAll().stream().map(this::toDto).toList();
+        if (filter.createdFrom() != null && filter.createdTo() != null
+                && filter.createdFrom().isAfter(filter.createdTo())) {
+            throw new InvalidFilterException("Start date is after end date");
+        }
+
+        Pageable pageable = PageRequest.of(
+                Math.max(page, 0),
+                Math.min(Math.max(size, 1), 100),
+                Sort.by(Sort.Order.desc("createdAt"), Sort.Order.desc("id")));
+
+        Page<Ticket> result = ticketRepository.findAll(
+                TicketSpecifications.matching(filter, InstantRange.of(filter.createdFrom(), filter.createdTo(), workshopZone)),
+                pageable);
+        return PageResponse.of(result.map(this::toDto));
     }
 
     public TicketDto getTicket(UUID publicId) {

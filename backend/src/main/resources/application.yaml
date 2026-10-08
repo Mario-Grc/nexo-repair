@@ -11,6 +11,7 @@ spring:
     show-sql: true
 
 nexo:
+  timezone: Atlantic/Canary
   jwt:
     secret: ${JWT_SECRET}
     expiration-hours: 8

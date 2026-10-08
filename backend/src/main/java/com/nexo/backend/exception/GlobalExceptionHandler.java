@@ -23,6 +23,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.badRequest().body(ex.getMessage());
     }
 
+    @ExceptionHandler(InvalidFilterException.class)
+    public ResponseEntity<String> handleInvalidFilter(InvalidFilterException ex) {
+        return ResponseEntity.badRequest().body(ex.getMessage());
+    }
+
     @ExceptionHandler(NoteRequiredException.class)
     public ResponseEntity<String> handleNoteRequired(NoteRequiredException ex) {
         return ResponseEntity.badRequest().body(ex.getMessage());
