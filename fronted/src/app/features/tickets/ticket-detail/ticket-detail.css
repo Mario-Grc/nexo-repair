@@ -22,10 +22,7 @@
 }
 
 .ticket-detail .p-card {
-  border: 1px solid var(--p-surface-200, #e5e7eb);
-  box-shadow:
-    0 1px 2px rgba(16, 24, 40, 0.06),
-    0 4px 12px rgba(16, 24, 40, 0.08);
+  border: 1px solid var(--nexo-border, var(--p-surface-200, #e5e7eb));
 }
 
 .ticket-detail .detail-stepper {
@@ -75,13 +72,22 @@
 .ticket-detail .detail-grid {
   display: grid;
   grid-template-columns: 2fr 1fr;
+  grid-template-areas: 'main side';
   gap: 1rem;
   align-items: start;
   margin-top: 1rem;
 }
 
-.ticket-detail .main-column,
+.ticket-detail .main-column {
+  grid-area: main;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 0;
+}
+
 .ticket-detail .side-column {
+  grid-area: side;
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -129,7 +135,7 @@
 }
 
 .ticket-detail .parts-hint {
-  color: var(--p-surface-500, #6b7280);
+  color: var(--nexo-muted);
   font-size: 0.875rem;
 }
 
@@ -163,7 +169,7 @@
 
 .ticket-detail .timeline-icon {
   margin-top: 0.2rem;
-  color: var(--p-surface-500, #6b7280);
+  color: var(--nexo-muted);
   font-size: 0.875rem;
 }
 
@@ -182,7 +188,7 @@
 .ticket-detail .timeline-row time {
   margin-left: auto;
   flex-shrink: 0;
-  color: var(--p-surface-500, #6b7280);
+  color: var(--nexo-muted);
   font-size: 0.875rem;
 }
 
@@ -195,9 +201,91 @@
   white-space: nowrap;
 }
 
-@media (max-width: 900px) {
+@media (max-width: 1023.98px) {
+  .ticket-detail .detail-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .ticket-detail .detail-header h1 {
+    margin-right: 0;
+  }
+
+  .ticket-detail .header-actions {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .ticket-detail .header-actions > * {
+    width: 100%;
+  }
+
   .ticket-detail .detail-grid {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      'customer'
+      'device'
+      'technician'
+      'problem'
+      'parts'
+      'note'
+      'timeline';
+  }
+
+  .ticket-detail .main-column,
+  .ticket-detail .side-column {
+    display: contents;
+  }
+
+  .ticket-detail .area-customer {
+    grid-area: customer;
+  }
+
+  .ticket-detail .area-device {
+    grid-area: device;
+  }
+
+  .ticket-detail .area-technician {
+    grid-area: technician;
+  }
+
+  .ticket-detail .area-problem {
+    grid-area: problem;
+  }
+
+  .ticket-detail .area-parts {
+    grid-area: parts;
+  }
+
+  .ticket-detail .area-note {
+    grid-area: note;
+  }
+
+  .ticket-detail .area-timeline {
+    grid-area: timeline;
+  }
+
+  .ticket-detail .area-parts .table-scroll table {
+    min-width: 32rem;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .ticket-detail .detail-stepper .p-steps-item-label {
+    display: none;
+  }
+
+  .ticket-detail .detail-stepper .p-steps-item-active .p-steps-item-label {
+    display: block;
+    font-size: 0.875rem;
+  }
+
+  .ticket-detail .detail-stepper .p-steps-item-number {
+    width: 1.5rem;
+    height: 1.5rem;
+    min-width: 1.5rem;
+    font-size: 0.75rem;
   }
 }
 

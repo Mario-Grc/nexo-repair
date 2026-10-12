@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { DialogModule } from 'primeng/dialog';
 import { PasswordModule } from 'primeng/password';
 import { ButtonModule } from 'primeng/button';
+import { MessageService } from 'primeng/api';
 import { AuthService } from '../../../core/services/auth.service';
 
 @Component({
@@ -14,6 +15,7 @@ import { AuthService } from '../../../core/services/auth.service';
 export class ChangePasswordDialog {
   private authService = inject(AuthService);
   private fb = inject(FormBuilder);
+  private messages = inject(MessageService);
 
   /** Two-way bound: parent opens with `passwordDialogVisible.set(true)` and binds explicitly. */
   visible = model(false);
@@ -48,6 +50,7 @@ export class ChangePasswordDialog {
         this.isSaving.set(false);
         this.visible.set(false);
         this.form.reset({ currentPassword: '', newPassword: '', confirmPassword: '' });
+        this.messages.add({ severity: 'success', summary: 'Password changed' });
       },
       error: (error: HttpErrorResponse) => {
         this.isSaving.set(false);

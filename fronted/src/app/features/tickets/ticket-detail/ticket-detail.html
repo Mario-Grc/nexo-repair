@@ -1,8 +1,21 @@
 <div class="ticket-detail" [attr.data-status]="ticket()?.status ?? null">
-@if (error()) {
+@if (isLoading()) {
+  <div class="stack">
+    <p-skeleton width="12rem" height="2rem" />
+    <p-skeleton width="100%" height="3rem" />
+    <p-skeleton width="100%" height="12rem" />
+    <p-skeleton width="100%" height="8rem" />
+  </div>
+} @else if (error() && !ticket()) {
   <p-message severity="error">{{ error() }}</p-message>
-  <p><a routerLink="/tickets">Back to tickets</a></p>
+  <div class="row">
+    <p-button label="Retry" icon="pi pi-refresh" severity="secondary" (onClick)="retry()" />
+    <a routerLink="/tickets">Back to tickets</a>
+  </div>
 } @else if (ticket(); as t) {
+  @if (error()) {
+    <p-message severity="error">{{ error() }}</p-message>
+  }
   <div class="detail-header">
     <h1>Ticket {{ shortId() }}</h1>
     <div class="header-actions">
@@ -18,9 +31,9 @@
       <p-button label="Print receipt" icon="pi pi-print" severity="secondary" (onClick)="openReceipt()" />
       @if (primaryStatus(); as next) {
         @if (splitButtonItems().length === 0) {
-          <p-button [label]="'Mark as ' + statusLabels[next]" (onClick)="changeStatus(next)" />
+          <p-button class="status-action" [label]="'Mark as ' + statusLabels[next]" (onClick)="changeStatus(next)" [loading]="isChangingStatus()" [disabled]="isChangingStatus()" />
         } @else {
-          <p-splitButton [label]="'Mark as ' + statusLabels[next]" [model]="splitButtonItems()" (onClick)="changeStatus(next)" />
+          <p-splitButton class="status-action" [label]="'Mark as ' + statusLabels[next]" [model]="splitButtonItems()" (onClick)="changeStatus(next)" [disabled]="isChangingStatus()" />
         }
       }
     </div>
@@ -34,7 +47,7 @@
 
   <div class="detail-grid">
     <section class="main-column">
-      <p-card>
+      <p-card class="area-problem">
         <div class="problem-title-row">
           <h3>Problem</h3>
           @if (!t.closed) {
@@ -51,34 +64,38 @@
         <p>{{ t.problemDescription }}</p>
       </p-card>
 
-      <p-card header="Parts">
+      <p-card header="Parts" class="area-parts">
         @if (parts().length > 0) {
-          <p-table [value]="parts()">
-            <ng-template #header>
-              <tr><th>Description</th><th>Quantity</th><th>Price</th><th>Total</th><th></th></tr>
-            </ng-template>
-            <ng-template #body let-part>
-              <tr>
-                <td>{{ part.description }}</td>
-                <td>{{ part.quantity }}</td>
-                <td>{{ part.unitPrice != null ? (part.unitPrice | currency:'EUR') : '-' }}</td>
-                <td>{{ part.lineTotal != null ? (part.lineTotal | currency:'EUR') : '-' }}</td>
-                <td>
-                  @if (!t.closed) {
-                    <p-button
-                      icon="pi pi-trash"
-                      severity="danger"
-                      [text]="true"
-                      size="small"
-                      aria-label="Remove part"
-                      title="Remove part"
-                      (onClick)="removePart(part.id)"
-                    />
-                  }
-                </td>
-              </tr>
-            </ng-template>
-          </p-table>
+          <div class="table-scroll">
+            <p-table [value]="parts()">
+              <ng-template #header>
+                <tr><th>Description</th><th>Quantity</th><th>Price</th><th>Total</th><th></th></tr>
+              </ng-template>
+              <ng-template #body let-part>
+                <tr>
+                  <td>{{ part.description }}</td>
+                  <td>{{ part.quantity }}</td>
+                  <td>{{ part.unitPrice != null ? (part.unitPrice | currency:'EUR') : '-' }}</td>
+                  <td>{{ part.lineTotal != null ? (part.lineTotal | currency:'EUR') : '-' }}</td>
+                  <td>
+                    @if (!t.closed) {
+                      <p-button
+                        icon="pi pi-trash"
+                        severity="danger"
+                        [text]="true"
+                        size="small"
+                        aria-label="Remove part"
+                        title="Remove part"
+                        (onClick)="removePart(part.id)"
+                        [disabled]="removingPartId() !== null"
+                        [loading]="removingPartId() === part.id"
+                      />
+                    }
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </div>
           @if (partsTotal() !== null) {
             <p class="parts-total">Total with price: {{ partsTotal() | currency:'EUR' }}</p>
           }
@@ -93,17 +110,17 @@
         }
       </p-card>
 
-      <p-card header="Add note">
+      <p-card header="Add note" class="area-note">
         <form [formGroup]="noteForm" (ngSubmit)="addNote()" class="note-form">
           <label>
             <span class="sr-only">Internal note</span>
             <textarea pTextarea formControlName="text" rows="3" maxlength="500" placeholder="Write an internal note…"></textarea>
           </label>
-          <p-button type="submit" label="Add note" [disabled]="noteForm.invalid" />
+          <p-button type="submit" label="Add note" [disabled]="noteForm.invalid || isAddingNote()" [loading]="isAddingNote()" />
         </form>
       </p-card>
 
-      <p-card header="Timeline">
+      <p-card header="Timeline" class="area-timeline">
         @for (entry of timeline(); track $index) {
           @switch (entry.type) {
             @case ('STATUS_CHANGE') {
@@ -167,19 +184,19 @@
     </section>
 
     <aside class="side-column">
-      <p-card header="Customer">
+      <p-card header="Customer" class="area-customer">
         <p><strong>{{ t.customerName }}</strong></p>
         <p>{{ customer()?.email || '-' }}</p>
         <p>{{ customer()?.phone || '-' }}</p>
       </p-card>
 
-      <p-card header="Device">
+      <p-card header="Device" class="area-device">
         <p><strong>{{ deviceTypeLabels[t.device.type] }}</strong></p>
         <p>{{ t.device.brand }} {{ t.device.model }}</p>
         <p>{{ t.device.identifier || '-' }}</p>
       </p-card>
 
-      <p-card header="Technician">
+      <p-card header="Technician" class="area-technician">
         <label>
           <span class="sr-only">Assigned technician</span>
           <p-select
@@ -189,10 +206,11 @@
             placeholder="Select a technician"
             [formControl]="assignControl"
             (onChange)="onAssignStaged()"
+            appendTo="body"
           />
         </label>
         <div class="assign-actions">
-          <p-button label="Save" size="small" [disabled]="!assignDirty()" (onClick)="onAssign()" />
+          <p-button label="Save" size="small" [disabled]="!assignDirty() || isAssigning()" [loading]="isAssigning()" (onClick)="onAssign()" />
         </div>
       </p-card>
     </aside>
@@ -227,7 +245,7 @@
     [modal]="true"
     [dismissableMask]="true"
     [style]="{ width: 'min(46rem, 92vw)' }"
-    styleClass="receipt-dialog"
+    styleClass="receipt-dialog nexo-dialog"
   >
     <div class="receipt-toolbar receipt-no-print">
       <fieldset class="receipt-options">

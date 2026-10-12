@@ -5,12 +5,14 @@ import { ButtonModule } from 'primeng/button';
 import { CardModule } from 'primeng/card';
 import { InputTextModule } from 'primeng/inputtext';
 import { PasswordModule } from 'primeng/password';
+import { ToastModule } from 'primeng/toast';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, InputTextModule, PasswordModule, ButtonModule, CardModule],
+  imports: [ReactiveFormsModule, InputTextModule, PasswordModule, ButtonModule, CardModule, ToastModule],
   template: `
+    <p-toast />
     <div class="login-screen">
       <p-card>
         <div class="login-brand">
@@ -33,7 +35,14 @@ import { AuthService } from '../../core/services/auth.service';
           @if (errorMessage() != null) {
             <p class="error" role="alert">{{ errorMessage() }}</p>
           }
-          <button pButton type="submit" label="Sign in" [disabled]="form.invalid || isSubmitting()" class="login-submit"></button>
+          <button
+            pButton
+            type="submit"
+            label="Sign in"
+            [disabled]="form.invalid || isSubmitting()"
+            [loading]="isSubmitting()"
+            class="login-submit"
+          ></button>
         </form>
       </p-card>
     </div>

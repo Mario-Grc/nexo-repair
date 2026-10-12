@@ -1,14 +1,21 @@
 <div class="shell">
+  <p-toast />
   <p-confirmDialog />
+  <header class="topbar">
+    <p-button
+      icon="pi pi-bars"
+      (onClick)="openMenu()"
+      [text]="true"
+      [rounded]="true"
+      severity="secondary"
+      ariaLabel="Open menu"
+      title="Open menu"
+    />
+    <span class="topbar-brand">Nexo</span>
+  </header>
   <aside class="sidebar">
     <div class="brand">Nexo</div>
-    <nav>
-      <a routerLink="/tickets" routerLinkActive="active">Tickets</a>
-      <a routerLink="/customers" routerLinkActive="active">Customers</a>
-      @if (isAdmin()) {
-        <a routerLink="/employees" routerLinkActive="active">Employees</a>
-      }
-    </nav>
+    <app-nav-links (navigated)="closeMenu()" />
     <div class="current-employee">
       <span class="employee-name">{{ auth.current()?.name }}</span>
       <p-button
@@ -37,5 +44,40 @@
     <router-outlet />
   </main>
 </div>
+
+<p-drawer
+  [visible]="drawerVisible()"
+  (visibleChange)="drawerVisible.set($event)"
+  header="Nexo"
+  position="left"
+  ariaCloseLabel="Close menu"
+>
+  <div class="drawer-body">
+    <app-nav-links (navigated)="closeMenu()" />
+    <div class="current-employee">
+      <span class="employee-name">{{ auth.current()?.name }}</span>
+      <p-button
+        icon="pi pi-key"
+        (onClick)="openPasswordDialog()"
+        [text]="true"
+        [rounded]="true"
+        severity="secondary"
+        size="small"
+        ariaLabel="Change password"
+        title="Change password"
+      />
+      <p-button
+        icon="pi pi-sign-out"
+        (onClick)="logout()"
+        [text]="true"
+        [rounded]="true"
+        severity="secondary"
+        size="small"
+        ariaLabel="Log out"
+        title="Log out"
+      />
+    </div>
+  </div>
+</p-drawer>
 
 <app-change-password-dialog [visible]="passwordDialogVisible()" (visibleChange)="passwordDialogVisible.set($event)" />

@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Customer, NewCustomer } from '../models/customer';
+import { silentContext } from '../interceptors/http-error.interceptor';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -18,10 +19,10 @@ export class CustomerService {
   }
 
   createCustomer(customer: NewCustomer): Observable<Customer> {
-    return this.http.post<Customer>(this.baseUrl, customer);
+    return this.http.post<Customer>(this.baseUrl, customer, { context: silentContext() });
   }
 
   updateCustomer(id: number, customer: NewCustomer): Observable<Customer> {
-    return this.http.put<Customer>(`${this.baseUrl}/${id}`, customer);
+    return this.http.put<Customer>(`${this.baseUrl}/${id}`, customer, { context: silentContext() });
   }
 }

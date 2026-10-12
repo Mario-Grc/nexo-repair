@@ -1,4 +1,4 @@
-<p-dialog [header]="dialogHeader()" [(visible)]="visible" (onShow)="onOpen()" (onHide)="onHide()" [modal]="true" [style]="{ width: '420px' }">
+<p-dialog [header]="dialogHeader()" [(visible)]="visible" (onShow)="onOpen()" (onHide)="onHide()" [modal]="true" [style]="{ width: '420px' }" styleClass="nexo-dialog">
   <form [formGroup]="form" (ngSubmit)="confirm()" class="dialog-form">
     @if (hint() != null) {
       <p>{{ hint() }}</p>

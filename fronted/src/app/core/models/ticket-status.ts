@@ -1,5 +1,14 @@
 export type TicketStatus = 'PENDING' | 'IN_PROGRESS' | 'WAITING_FOR_PARTS' | 'COMPLETED' | 'DELIVERED' | 'CANCELLED';
 
+export const ALL_TICKET_STATUSES: readonly TicketStatus[] = [
+  'PENDING',
+  'IN_PROGRESS',
+  'WAITING_FOR_PARTS',
+  'COMPLETED',
+  'DELIVERED',
+  'CANCELLED',
+];
+
 export const TICKET_STATUS_LABELS: Record<TicketStatus, string> = {
   PENDING: 'Pending',
   IN_PROGRESS: 'In progress',

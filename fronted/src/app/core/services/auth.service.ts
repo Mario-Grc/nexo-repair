@@ -2,6 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { inject, Injectable, signal } from '@angular/core';
 import { finalize, tap } from 'rxjs';
 import { Employee } from '../models/employee';
+import { silentContext } from '../interceptors/http-error.interceptor';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -14,7 +15,7 @@ export class AuthService {
 
   login(email: string, password: string) {
     return this.http
-      .post<Employee>(`${this.baseUrl}/login`, { email, password })
+      .post<Employee>(`${this.baseUrl}/login`, { email, password }, { context: silentContext() })
       .pipe(tap(employee => this._current.set(employee)));
   }
 
@@ -31,7 +32,7 @@ export class AuthService {
   }
 
   changePassword(currentPassword: string, newPassword: string) {
-    return this.http.patch<void>(`${this.baseUrl}/password`, { currentPassword, newPassword });
+    return this.http.patch<void>(`${this.baseUrl}/password`, { currentPassword, newPassword }, { context: silentContext() });
   }
 
   get isLoggedIn(): boolean {

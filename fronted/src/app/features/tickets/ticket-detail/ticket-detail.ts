@@ -1,5 +1,6 @@
 import { Component, OnInit, ViewEncapsulation, computed, inject, signal } from '@angular/core';
 import { CurrencyPipe, DatePipe } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators, AbstractControl, ValidationErrors } from '@angular/forms';
 import { TagModule } from 'primeng/tag';
@@ -12,7 +13,8 @@ import { SelectModule } from 'primeng/select';
 import { TextareaModule } from 'primeng/textarea';
 import { MessageModule } from 'primeng/message';
 import { TableModule } from 'primeng/table';
-import { MenuItem } from 'primeng/api';
+import { SkeletonModule } from 'primeng/skeleton';
+import { MenuItem, MessageService } from 'primeng/api';
 import { TicketService } from '../../../core/services/ticket.service';
 import { CustomerService } from '../../../core/services/customer.service';
 import { AssignableTechnician, EmployeeService } from '../../../core/services/employee.service';
@@ -29,7 +31,7 @@ import { EditDescriptionDialog } from './edit-description-dialog';
 
 @Component({
   selector: 'app-ticket-detail',
-  imports: [RouterLink, DatePipe, CurrencyPipe, ReactiveFormsModule, TagModule, ButtonModule, SplitButtonModule, StepsModule, CardModule, DialogModule, SelectModule, TextareaModule, MessageModule, TableModule, StatusChangeDialog, AddPartDialog, EditDescriptionDialog],
+  imports: [RouterLink, DatePipe, CurrencyPipe, ReactiveFormsModule, TagModule, ButtonModule, SplitButtonModule, StepsModule, CardModule, DialogModule, SelectModule, TextareaModule, MessageModule, TableModule, SkeletonModule, StatusChangeDialog, AddPartDialog, EditDescriptionDialog],
   templateUrl: './ticket-detail.html',
   styleUrl: './ticket-detail.css',
   // Required to theme PrimeNG internals. All rules stay under .ticket-detail.
@@ -41,6 +43,7 @@ export class TicketDetail implements OnInit {
   private customerService = inject(CustomerService);
   private employeeService = inject(EmployeeService);
   private fb = inject(FormBuilder);
+  private messages = inject(MessageService);
 
   private publicId = '';
 
@@ -57,6 +60,11 @@ export class TicketDetail implements OnInit {
   receiptVisible = signal(false);
   receiptMode = signal<'none' | 'status' | 'all'>('status');
   error = signal<string | null>(null);
+  isLoading = signal(true);
+  isAssigning = signal(false);
+  isAddingNote = signal(false);
+  isChangingStatus = signal(false);
+  removingPartId = signal<number | null>(null);
   // The technician selection is staged and saved only when Save is clicked.
   assignDirty = signal(false);
 
@@ -112,6 +120,7 @@ export class TicketDetail implements OnInit {
     const publicId = this.route.snapshot.paramMap.get('publicId');
     if (!publicId) {
       this.error.set('Ticket not found.');
+      this.isLoading.set(false);
       return;
     }
     this.publicId = publicId;
@@ -121,15 +130,28 @@ export class TicketDetail implements OnInit {
     this.employeeService.getAssignableTechnicians().subscribe(list => this.technicians.set(list));
   }
 
+  retry(): void {
+    this.error.set(null);
+    this.isLoading.set(true);
+    this.loadTicket();
+    this.loadTimeline();
+    this.loadParts();
+  }
+
   loadTicket(): void {
     this.ticketService.getTicket(this.publicId).subscribe({
       next: ticket => {
         this.ticket.set(ticket);
         this.assignControl.setValue(ticket.assignedEmployeeId ?? null, { emitEvent: false });
         this.assignDirty.set(false);
+        this.error.set(null);
+        this.isLoading.set(false);
         this.loadCustomer(ticket.customerId);
       },
-      error: () => this.error.set('Ticket not found.'),
+      error: (e: HttpErrorResponse) => {
+        this.error.set(e.status === 404 ? 'Ticket not found.' : 'Could not load the ticket.');
+        this.isLoading.set(false);
+      },
     });
   }
 
@@ -166,15 +188,20 @@ export class TicketDetail implements OnInit {
 
   private doChangeStatus(status: TicketStatus, note: string | null): void {
     const ticket = this.ticket();
-    if (!ticket) return;
+    if (!ticket || this.isChangingStatus()) return;
+    this.isChangingStatus.set(true);
     this.ticketService
       .changeStatus(this.publicId, { newStatus: status, note })
       .subscribe({
         next: updated => {
           this.ticket.set(updated);
+          this.isChangingStatus.set(false);
           this.loadTimeline();
         },
-        error: e => this.error.set(e.status === 400 ? 'A note is required for this status.' : 'Could not change the status.'),
+        error: e => {
+          this.isChangingStatus.set(false);
+          this.error.set(e.status === 400 ? 'A note is required for this status.' : 'Could not change the status.');
+        },
       });
   }
 
@@ -188,12 +215,19 @@ export class TicketDetail implements OnInit {
   }
 
   removePart(partId: number): void {
+    if (this.removingPartId() !== null) return;
+    this.removingPartId.set(partId);
     this.ticketService.removePart(this.publicId, partId).subscribe({
       next: () => {
+        this.removingPartId.set(null);
+        this.messages.add({ severity: 'success', summary: 'Part removed' });
         this.loadParts();
         this.loadTimeline();
       },
-      error: e => this.error.set(e.status === 409 ? 'The ticket is closed.' : 'Could not remove the part.'),
+      error: e => {
+        this.removingPartId.set(null);
+        this.error.set(e.status === 409 ? 'The ticket is closed.' : 'Could not remove the part.');
+      },
     });
   }
 
@@ -203,23 +237,34 @@ export class TicketDetail implements OnInit {
   }
 
   onAssign(): void {
+    if (this.isAssigning()) return;
+    this.isAssigning.set(true);
     this.ticketService.assignEmployee(this.publicId, {
       employeeId: this.assignControl.value ?? null,
-    }).subscribe(updated => {
-      this.ticket.set(updated);
-      this.assignControl.setValue(updated.assignedEmployeeId ?? null, { emitEvent: false });
-      this.assignDirty.set(false);
-      this.loadTimeline();
+    }).subscribe({
+      next: updated => {
+        this.ticket.set(updated);
+        this.assignControl.setValue(updated.assignedEmployeeId ?? null, { emitEvent: false });
+        this.assignDirty.set(false);
+        this.isAssigning.set(false);
+        this.loadTimeline();
+      },
+      error: () => this.isAssigning.set(false),
     });
   }
 
   addNote(): void {
-    if (this.noteForm.invalid) return;
+    if (this.noteForm.invalid || this.isAddingNote()) return;
     const text = this.noteForm.controls.text.value.trim();
     if (!text) return;
-    this.ticketService.addNote(this.publicId, { text }).subscribe(() => {
-      this.noteForm.reset();
-      this.loadTimeline();
+    this.isAddingNote.set(true);
+    this.ticketService.addNote(this.publicId, { text }).subscribe({
+      next: () => {
+        this.isAddingNote.set(false);
+        this.noteForm.reset();
+        this.loadTimeline();
+      },
+      error: () => this.isAddingNote.set(false),
     });
   }
 

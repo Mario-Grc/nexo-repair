@@ -5,6 +5,7 @@ import { NewTicket, Ticket } from '../models/ticket';
 import { TicketStatus } from '../models/ticket-status';
 import { NewPart, PartsResponse, TicketPart } from '../models/ticket-part';
 import { TimelineEntry } from '../models/timeline-entry';
+import { silentContext } from '../interceptors/http-error.interceptor';
 import { environment } from '../../../environments/environment';
 import type { TicketFilters } from '../models/ticket-filters';
 
@@ -54,11 +55,11 @@ export class TicketService {
   }
 
   changeStatus(publicId: string, dto: { newStatus: TicketStatus; note: string | null }): Observable<Ticket> {
-    return this.http.patch<Ticket>(`${this.baseUrl}/${publicId}/status`, dto);
+    return this.http.patch<Ticket>(`${this.baseUrl}/${publicId}/status`, dto, { context: silentContext() });
   }
 
   updateDetails(publicId: string, dto: { problemDescription: string }): Observable<Ticket> {
-    return this.http.patch<Ticket>(`${this.baseUrl}/${publicId}/details`, dto);
+    return this.http.patch<Ticket>(`${this.baseUrl}/${publicId}/details`, dto, { context: silentContext() });
   }
 
   addNote(publicId: string, dto: { text: string }): Observable<void> {
@@ -74,10 +75,10 @@ export class TicketService {
   }
 
   addPart(publicId: string, part: NewPart): Observable<TicketPart> {
-    return this.http.post<TicketPart>(`${this.baseUrl}/${publicId}/parts`, part);
+    return this.http.post<TicketPart>(`${this.baseUrl}/${publicId}/parts`, part, { context: silentContext() });
   }
 
   removePart(publicId: string, partId: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${publicId}/parts/${partId}`);
+    return this.http.delete<void>(`${this.baseUrl}/${publicId}/parts/${partId}`, { context: silentContext() });
   }
 }

@@ -1,11 +1,37 @@
-body { margin: 0; font-family: 'Inter', sans-serif; }
+:root {
+  --nexo-page: var(--p-surface-50);
+  --nexo-sidebar: var(--p-surface-100);
+  --nexo-card: var(--p-surface-0);
+  --nexo-border: var(--p-surface-200);
+  --nexo-ink: var(--p-text-color);
+  --nexo-muted: var(--p-text-muted-color);
+  --nexo-radius: 8px;
+  --nexo-gap: 1rem;
+  --nexo-mono: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+}
 
-/* Shared minimum height for data rows in every table.
-   Without it, lists with p-tag (tickets) end up with taller rows
-   than text only ones (customers). In table layout, height on tr
-   acts as a minimum. Rows still grow when content needs it. */
-.p-datatable-tbody > tr {
-  height: 3.5rem;
+html,
+body {
+  margin: 0;
+  background: var(--nexo-page);
+  color: var(--nexo-ink);
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+/* Breakpoints: mobile below 768px, tablet 768px to 1023px, desktop 1024px and up.
+   CSS cannot use var() inside @media, so literals are used below. */
+
+/* Hover feedback for clickable table rows (tickets, customers, employees). */
+.p-datatable-tbody > tr.clickable-row {
+  cursor: pointer;
+}
+
+.p-datatable-tbody > tr.clickable-row:hover,
+.p-datatable-tbody > tr.clickable-row:hover > td {
+  background: var(--nexo-sidebar);
 }
 
 /* Shared page header: title left, action right */
@@ -19,6 +45,46 @@ body { margin: 0; font-family: 'Inter', sans-serif; }
 
 .page-header h1 {
   margin: 0;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--nexo-gap);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--nexo-gap);
+  flex-wrap: wrap;
+}
+
+.muted {
+  color: var(--nexo-muted);
+}
+
+.mono {
+  font-family: var(--nexo-mono);
+  text-transform: uppercase;
+}
+
+.table-scroll {
+  overflow-x: auto;
+}
+
+.error {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--p-red-500, #dc2626);
+}
+
+/* Shared minimum height for data rows in every table.
+   Without it, lists with p-tag (tickets) end up with taller rows
+   than text only ones (customers). In table layout, height on tr
+   acts as a minimum. Rows still grow when content needs it. */
+.p-datatable-tbody > tr {
+  height: 3.5rem;
 }
 
 /* Shared dialog form layout (New customer / New ticket).
@@ -74,5 +140,34 @@ body { margin: 0; font-family: 'Inter', sans-serif; }
 @media (max-width: 480px) {
   .device-group {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .nexo-dialog {
+    width: 100vw !important;
+    max-height: 100dvh !important;
+    height: 100dvh;
+    margin: 0;
+    border-radius: 0;
+  }
+
+  .nexo-dialog input,
+  .nexo-dialog textarea,
+  .nexo-dialog .p-inputtext,
+  .nexo-dialog .p-password-input,
+  .nexo-dialog .p-select-label,
+  .nexo-dialog .p-multiselect-label {
+    font-size: 16px;
+  }
+
+  .nexo-dialog input,
+  .nexo-dialog textarea,
+  .nexo-dialog button,
+  .nexo-dialog .p-button,
+  .nexo-dialog .p-select,
+  .nexo-dialog .p-multiselect,
+  .nexo-dialog .p-datepicker-input {
+    min-height: 44px;
   }
 }

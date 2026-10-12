@@ -2,6 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { inject, Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { Employee, EmployeeRole, NewEmployee } from '../models/employee';
+import { silentContext } from '../interceptors/http-error.interceptor';
 import { environment } from '../../../environments/environment';
 
 export interface AssignableTechnician {
@@ -26,22 +27,22 @@ export class EmployeeService {
   }
 
   createEmployee(employee: NewEmployee): Observable<Employee> {
-    return this.http.post<Employee>(this.baseUrl, employee);
+    return this.http.post<Employee>(this.baseUrl, employee, { context: silentContext() });
   }
 
   updateRole(id: number, role: EmployeeRole): Observable<Employee> {
-    return this.http.patch<Employee>(`${this.baseUrl}/${id}/role`, { role });
+    return this.http.patch<Employee>(`${this.baseUrl}/${id}/role`, { role }, { context: silentContext() });
   }
 
   updateActive(id: number, active: boolean): Observable<Employee> {
-    return this.http.patch<Employee>(`${this.baseUrl}/${id}/active`, { active });
+    return this.http.patch<Employee>(`${this.baseUrl}/${id}/active`, { active }, { context: silentContext() });
   }
 
   resetPassword(id: number, newPassword: string): Observable<void> {
-    return this.http.patch<void>(`${this.baseUrl}/${id}/password`, { newPassword });
+    return this.http.patch<void>(`${this.baseUrl}/${id}/password`, { newPassword }, { context: silentContext() });
   }
 
   updateProfile(id: number, profile: { name: string; email: string }): Observable<Employee> {
-    return this.http.patch<Employee>(`${this.baseUrl}/${id}/profile`, profile);
+    return this.http.patch<Employee>(`${this.baseUrl}/${id}/profile`, profile, { context: silentContext() });
   }
 }

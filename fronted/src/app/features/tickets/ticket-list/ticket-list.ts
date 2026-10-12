@@ -1,12 +1,15 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
-import { DatePipe } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { DatePipe, NgTemplateOutlet } from '@angular/common';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { FormBuilder, FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, debounceTime, distinctUntilChanged, filter, finalize, of, switchMap, tap } from 'rxjs';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
+import { DrawerModule } from 'primeng/drawer';
+import { PaginatorModule } from 'primeng/paginator';
+import { SkeletonModule } from 'primeng/skeleton';
 import { InputTextModule } from 'primeng/inputtext';
 import { TextareaModule } from 'primeng/textarea';
 import { SelectModule } from 'primeng/select';
@@ -17,10 +20,11 @@ import { TicketService } from '../../../core/services/ticket.service';
 import { CustomerService } from '../../../core/services/customer.service';
 import { EmployeeService, type AssignableTechnician } from '../../../core/services/employee.service';
 import { AuthService } from '../../../core/services/auth.service';
+import { ViewportService } from '../../../core/services/viewport.service';
 import { Customer } from '../../../core/models/customer';
 import { Ticket } from '../../../core/models/ticket';
 import { DEVICE_TYPE_OPTIONS } from '../../../core/models/device-type';
-import { TicketStatus, TICKET_STATUS_LABELS, TICKET_STATUS_SEVERITY } from '../../../core/models/ticket-status';
+import { TicketStatus, TICKET_STATUS_LABELS, TICKET_STATUS_SEVERITY, ALL_TICKET_STATUSES } from '../../../core/models/ticket-status';
 import {
   defaultFilters,
   filtersFromParams,
@@ -29,21 +33,15 @@ import {
   type TicketFilters,
 } from './ticket-filters';
 
-const ALL_STATUSES: TicketStatus[] = [
-  'PENDING',
-  'IN_PROGRESS',
-  'WAITING_FOR_PARTS',
-  'COMPLETED',
-  'DELIVERED',
-  'CANCELLED',
-];
-
 @Component({
   selector: 'app-ticket-list',
   imports: [
     TableModule,
     ButtonModule,
     DialogModule,
+    DrawerModule,
+    PaginatorModule,
+    SkeletonModule,
     InputTextModule,
     TextareaModule,
     SelectModule,
@@ -53,6 +51,8 @@ const ALL_STATUSES: TicketStatus[] = [
     ReactiveFormsModule,
     FormsModule,
     DatePipe,
+    RouterLink,
+    NgTemplateOutlet,
   ],
   templateUrl: './ticket-list.html',
   styleUrl: './ticket-list.css',
@@ -66,18 +66,23 @@ export class TicketList implements OnInit {
   private employeeService = inject(EmployeeService);
   private auth = inject(AuthService);
   private fb = inject(FormBuilder);
+  viewport = inject(ViewportService);
 
   filters = signal<TicketFilters>(defaultFilters(null, null));
   tickets = signal<Ticket[]>([]);
   totalElements = signal(0);
   loading = signal(false);
+  loadError = signal<string | null>(null);
+  hasLoaded = signal(false);
+  isSaving = signal(false);
   technicians = signal<AssignableTechnician[]>([]);
   customers = signal<Customer[]>([]);
   dialogVisible = signal(false);
+  filtersDrawerVisible = signal(false);
 
   searchControl = new FormControl('', { nonNullable: true });
 
-  statusOptions = ALL_STATUSES.map(status => ({ label: TICKET_STATUS_LABELS[status], value: status }));
+  statusOptions = ALL_TICKET_STATUSES.map(status => ({ label: TICKET_STATUS_LABELS[status], value: status }));
 
   assigneeOptions = computed(() => [
     { label: 'All technicians', value: null as number | 'unassigned' | null },
@@ -95,6 +100,22 @@ export class TicketList implements OnInit {
     if (to !== null) return [to];
     return null;
   });
+
+  // Counts only filters that differ from the default view, so entering
+  // with defaults shows Filters (0) and the "no tickets yet" empty state.
+  activeFilterCount = computed(() => {
+    const current = this.filters();
+    const me = this.auth.current();
+    const defaults = defaultFilters(me?.role ?? null, me?.id ?? null);
+    let count = 0;
+    if (!sameStatusSet(current.status, defaults.status)) count += 1;
+    if (current.assignee !== defaults.assignee) count += 1;
+    if (current.createdFrom !== null || current.createdTo !== null) count += 1;
+    if (current.q.trim() !== '') count += 1;
+    return count;
+  });
+
+  isFiltered = computed(() => this.activeFilterCount() > 0);
 
   deviceTypeOptions = DEVICE_TYPE_OPTIONS;
   statusLabels = TICKET_STATUS_LABELS;
@@ -149,11 +170,14 @@ export class TicketList implements OnInit {
         switchMap(paramMap => {
           const next = filtersFromParams(paramMap);
           this.loading.set(true);
+          this.loadError.set(null);
           return this.ticketService.getTickets(next).pipe(
             finalize(() => this.loading.set(false)),
-            catchError(() =>
-              of({ content: [], page: next.page, size: next.size, totalElements: 0, totalPages: 0 }),
-            ),
+            catchError(() => {
+              this.loadError.set('Could not load tickets.');
+              this.hasLoaded.set(true);
+              return of({ content: [], page: next.page, size: next.size, totalElements: 0, totalPages: 0 });
+            }),
           );
         }),
         takeUntilDestroyed(this.destroyRef),
@@ -161,6 +185,7 @@ export class TicketList implements OnInit {
       .subscribe(page => {
         this.tickets.set(page.content);
         this.totalElements.set(page.totalElements);
+        this.hasLoaded.set(true);
       });
   }
 
@@ -186,14 +211,39 @@ export class TicketList implements OnInit {
     this.navigateWith({ createdFrom: from, createdTo: to, page: 0 });
   }
 
-  onPage(event: { first: number; rows: number }): void {
-    const page = Math.floor(event.first / event.rows);
+  // p-table emits numbers while p-paginator fields are optional,
+  // so missing values fall back to the current page and size.
+  onPage(event: { first?: number; rows?: number }): void {
     const current = this.filters();
-    if (page === current.page && event.rows === current.size) return;
-    this.navigateWith({ page, size: event.rows });
+    const rows = event.rows ?? current.size;
+    const page = Math.floor((event.first ?? current.page * current.size) / rows);
+    if (page === current.page && rows === current.size) return;
+    this.navigateWith({ page, size: rows });
+  }
+
+  retry(): void {
+    const current = this.filters();
+    this.loading.set(true);
+    this.loadError.set(null);
+    this.ticketService.getTickets(current).subscribe({
+      next: page => {
+        this.tickets.set(page.content);
+        this.totalElements.set(page.totalElements);
+        this.loading.set(false);
+        this.hasLoaded.set(true);
+      },
+      error: () => {
+        this.tickets.set([]);
+        this.totalElements.set(0);
+        this.loading.set(false);
+        this.hasLoaded.set(true);
+        this.loadError.set('Could not load tickets.');
+      },
+    });
   }
 
   resetFilters(): void {
+    this.filtersDrawerVisible.set(false);
     this.router.navigate(['/tickets']);
   }
 
@@ -207,21 +257,30 @@ export class TicketList implements OnInit {
   }
 
   save(): void {
-    if (this.form.invalid) return;
+    if (this.form.invalid || this.isSaving()) return;
     const customerId = this.form.controls.customerId.value;
     if (customerId === null) return;
 
     const raw = this.form.getRawValue();
+    this.isSaving.set(true);
     this.ticketService
       .createTicket({
         customerId,
         problemDescription: raw.problemDescription,
         device: { ...raw.device, identifier: raw.device.identifier || null },
       })
-      .subscribe(() => {
-        this.dialogVisible.set(false);
-        this.refresh();
+      .subscribe({
+        next: () => {
+          this.isSaving.set(false);
+          this.dialogVisible.set(false);
+          this.retry();
+        },
+        error: () => this.isSaving.set(false),
       });
+  }
+
+  shortId(publicId: string): string {
+    return publicId.slice(0, 8).toUpperCase();
   }
 
   openDetail(ticket: Ticket): void {
@@ -240,25 +299,12 @@ export class TicketList implements OnInit {
     const next: TicketFilters = { ...this.filters(), ...patch };
     this.router.navigate([], { relativeTo: this.route, queryParams: paramsFromFilters(next) });
   }
+}
 
-  // Reload the current page after a mutation. Filter changes navigate
-  // instead, so this stays out of the URL driven flow.
-  private refresh(): void {
-    const current = this.filters();
-    this.loading.set(true);
-    this.ticketService.getTickets(current).subscribe({
-      next: page => {
-        this.tickets.set(page.content);
-        this.totalElements.set(page.totalElements);
-        this.loading.set(false);
-      },
-      error: () => {
-        this.tickets.set([]);
-        this.totalElements.set(0);
-        this.loading.set(false);
-      },
-    });
-  }
+// Same values regardless of order, so a manual selection equal to the
+// default view still counts as unfiltered.
+function sameStatusSet(current: TicketStatus[], defaults: TicketStatus[]): boolean {
+  return current.length === defaults.length && current.every(status => defaults.includes(status));
 }
 
 // The URL stores dates without time, so parsing builds a local midnight.

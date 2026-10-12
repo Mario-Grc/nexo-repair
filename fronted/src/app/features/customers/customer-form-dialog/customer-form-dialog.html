@@ -4,6 +4,7 @@
   (onShow)="onOpen()"
   [modal]="true"
   [style]="{ width: '420px' }"
+  styleClass="nexo-dialog"
 >
   <form [formGroup]="form" (ngSubmit)="save()" class="dialog-form">
     <label for="customer-name">
@@ -19,6 +20,6 @@
     @if (saveError() != null) {
       <p class="error" role="alert">{{ saveError() }}</p>
     }
-    <p-button type="submit" label="Save" [disabled]="form.invalid || isSaving()" />
+    <p-button type="submit" label="Save" [disabled]="form.invalid || isSaving()" [loading]="isSaving()" />
   </form>
 </p-dialog>

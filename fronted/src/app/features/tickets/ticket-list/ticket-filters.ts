@@ -1,23 +1,14 @@
 import type { ParamMap, Params } from '@angular/router';
 import type { EmployeeRole } from '../../../core/models/employee';
-import type { TicketStatus } from '../../../core/models/ticket-status';
+import { ALL_TICKET_STATUSES, type TicketStatus } from '../../../core/models/ticket-status';
 import { OPEN_STATUSES, type TicketFilters } from '../../../core/models/ticket-filters';
 
 export { OPEN_STATUSES, type TicketFilters };
 
-const VALID_STATUSES: readonly TicketStatus[] = [
-  'PENDING',
-  'IN_PROGRESS',
-  'WAITING_FOR_PARTS',
-  'COMPLETED',
-  'DELIVERED',
-  'CANCELLED',
-];
-
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 function isTicketStatus(value: string): value is TicketStatus {
-  return (VALID_STATUSES as readonly string[]).includes(value);
+  return (ALL_TICKET_STATUSES as readonly string[]).includes(value);
 }
 
 function readDate(value: string | null): string | null {

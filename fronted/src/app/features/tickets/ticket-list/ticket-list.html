@@ -3,15 +3,7 @@
   <p-button label="New ticket" icon="pi pi-plus" (onClick)="openNew()" />
 </div>
 
-<div class="filter-bar">
-  <label class="filter-field filter-search">
-    <span>Search</span>
-    <input
-      pInputText
-      [formControl]="searchControl"
-      placeholder="Search by customer, brand, model or serial..."
-    />
-  </label>
+<ng-template #filterControls>
   <label class="filter-field">
     <span>Status</span>
     <p-multiSelect
@@ -22,6 +14,7 @@
       (onChange)="onStatusChange($event.value)"
       placeholder="All statuses"
       display="chip"
+      appendTo="body"
     />
   </label>
   <label class="filter-field">
@@ -33,6 +26,7 @@
       [ngModel]="filters().assignee"
       (onChange)="onAssigneeChange($event.value)"
       placeholder="All technicians"
+      appendTo="body"
     />
   </label>
   <label class="filter-field">
@@ -45,42 +39,133 @@
       [showClear]="true"
       [ngModel]="dateRange()"
       (ngModelChange)="onDateRangeChange($event)"
+      appendTo="body"
     />
   </label>
   <p-button label="Reset" icon="pi pi-filter-slash" severity="secondary" (onClick)="resetFilters()" />
-</div>
+</ng-template>
 
-<p-table
-  [value]="tickets()"
-  [lazy]="true"
-  [lazyLoadOnInit]="false"
-  [paginator]="true"
-  [rows]="filters().size"
-  [first]="filters().page * filters().size"
-  [totalRecords]="totalElements()"
-  [loading]="loading()"
-  (onPage)="onPage($event)"
-  emptyMessage="No tickets match the current filters."
->
-  <ng-template #header>
-    <tr>
-      <th>Customer</th>
-      <th>Device</th>
-      <th>Status</th>
-      <th>Technician</th>
-      <th>Created</th>
-    </tr>
-  </ng-template>
-  <ng-template #body let-ticket>
-    <tr (click)="openDetail(ticket)" style="cursor: pointer">
-      <td>{{ ticket.customerName }}</td>
-      <td>{{ ticket.device.brand }} {{ ticket.device.model }}</td>
-      <td><p-tag [value]="getStatusLabel(ticket.status)" [severity]="getStatusSeverity(ticket.status)" /></td>
-      <td>{{ ticket.assignedEmployeeName ?? 'Unassigned' }}</td>
-      <td>{{ ticket.createdAt | date:'dd/MM/yyyy' }}</td>
-    </tr>
-  </ng-template>
-</p-table>
+@if (!viewport.isMobile()) {
+  <div class="filter-bar">
+    <label class="filter-field filter-search">
+      <span>Search</span>
+      <input
+        pInputText
+        [formControl]="searchControl"
+        placeholder="Search by customer, brand, model or serial..."
+      />
+    </label>
+    <ng-container [ngTemplateOutlet]="filterControls" />
+  </div>
+} @else {
+  <div class="filter-bar-mobile">
+    <label class="filter-search-mobile">
+      <span class="sr-only">Search</span>
+      <input
+        pInputText
+        [formControl]="searchControl"
+        placeholder="Search tickets..."
+      />
+    </label>
+    <p-button
+      label="Filters{{ activeFilterCount() > 0 ? ' (' + activeFilterCount() + ')' : '' }}"
+      icon="pi pi-sliders-h"
+      severity="secondary"
+      (onClick)="filtersDrawerVisible.set(true)"
+    />
+  </div>
+  <p-drawer
+    [visible]="filtersDrawerVisible()"
+    (visibleChange)="filtersDrawerVisible.set($event)"
+    header="Filters"
+    position="bottom"
+    styleClass="filter-drawer"
+    ariaCloseLabel="Close filters"
+  >
+    <div class="filter-drawer-body">
+      <ng-container [ngTemplateOutlet]="filterControls" />
+    </div>
+  </p-drawer>
+}
+
+@if (loading() && !hasLoaded()) {
+  <div class="stack">
+    <p-skeleton width="100%" height="4rem" />
+    <p-skeleton width="100%" height="4rem" />
+    <p-skeleton width="100%" height="4rem" />
+  </div>
+} @else if (loadError()) {
+  <p class="error" role="alert">{{ loadError() }}</p>
+  <p-button label="Retry" icon="pi pi-refresh" severity="secondary" (onClick)="retry()" />
+} @else if (tickets().length === 0) {
+  @if (isFiltered()) {
+    <p>No tickets match the current filters.</p>
+  } @else {
+    <p>No tickets yet.</p>
+  }
+} @else {
+  @if (viewport.isMobile()) {
+    <div class="ticket-cards">
+      @for (ticket of tickets(); track ticket.publicId) {
+        <a [routerLink]="['/tickets', ticket.publicId]" class="ticket-card">
+          <span class="row ticket-card-top">
+            <span class="mono">{{ shortId(ticket.publicId) }}</span>
+            <p-tag [value]="getStatusLabel(ticket.status)" [severity]="getStatusSeverity(ticket.status)" />
+          </span>
+          <strong>{{ ticket.device.brand }} {{ ticket.device.model }}</strong>
+          <span class="muted">{{ ticket.customerName }}</span>
+          <span class="row ticket-card-meta">
+            <span class="muted">{{ ticket.assignedEmployeeName ?? 'Unassigned' }}</span>
+            <span class="muted">{{ ticket.createdAt | date:'dd/MM/yyyy' }}</span>
+          </span>
+        </a>
+      }
+    </div>
+    <p-paginator
+      [first]="filters().page * filters().size"
+      [rows]="filters().size"
+      [totalRecords]="totalElements()"
+      [pageLinkSize]="3"
+      (onPageChange)="onPage($event)"
+    />
+  } @else {
+    <div class="table-scroll">
+      <p-table
+        [value]="tickets()"
+        [lazy]="true"
+        [lazyLoadOnInit]="false"
+        [paginator]="true"
+        [rows]="filters().size"
+        [first]="filters().page * filters().size"
+        [totalRecords]="totalElements()"
+        [loading]="loading()"
+        (onPage)="onPage($event)"
+        emptyMessage="No tickets match the current filters."
+      >
+        <ng-template #header>
+          <tr>
+            <th>ID</th>
+            <th>Customer</th>
+            <th>Device</th>
+            <th>Status</th>
+            <th>Technician</th>
+            <th>Created</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-ticket>
+          <tr class="clickable-row" (click)="openDetail(ticket)">
+            <td><a [routerLink]="['/tickets', ticket.publicId]" class="mono" (click)="$event.stopPropagation()">{{ shortId(ticket.publicId) }}</a></td>
+            <td>{{ ticket.customerName }}</td>
+            <td>{{ ticket.device.brand }} {{ ticket.device.model }}</td>
+            <td><p-tag [value]="getStatusLabel(ticket.status)" [severity]="getStatusSeverity(ticket.status)" /></td>
+            <td>{{ ticket.assignedEmployeeName ?? 'Unassigned' }}</td>
+            <td>{{ ticket.createdAt | date:'dd/MM/yyyy' }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  }
+}
 
 <p-dialog
   header="New ticket"
@@ -88,6 +173,7 @@
   (visibleChange)="dialogVisible.set($event)"
   [modal]="true"
   [style]="{ width: '480px' }"
+  styleClass="nexo-dialog"
 >
   <form [formGroup]="form" (ngSubmit)="save()" class="dialog-form">
     <label>
@@ -110,6 +196,6 @@
       <textarea pTextarea formControlName="problemDescription" rows="3" required maxlength="500"></textarea>
     </label>
 
-    <p-button type="submit" label="Create ticket" [disabled]="form.invalid" />
+    <p-button type="submit" label="Create ticket" [disabled]="form.invalid || isSaving()" [loading]="isSaving()" />
   </form>
 </p-dialog>

@@ -18,10 +18,7 @@
 }
 
 .customer-detail .p-card {
-  border: 1px solid var(--p-surface-200, #e5e7eb);
-  box-shadow:
-    0 1px 2px rgba(16, 24, 40, 0.06),
-    0 4px 12px rgba(16, 24, 40, 0.08);
+  border: 1px solid var(--nexo-border);
 }
 
 .customer-detail .detail-grid {

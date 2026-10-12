@@ -1,4 +1,4 @@
-<p-dialog header="Add part" [(visible)]="visible" (onShow)="onOpen()" [modal]="true" [style]="{ width: '420px' }">
+<p-dialog header="Add part" [(visible)]="visible" (onShow)="onOpen()" [modal]="true" [style]="{ width: '420px' }" styleClass="nexo-dialog">
   <form [formGroup]="form" (ngSubmit)="save()" class="dialog-form">
     <label for="part-description">
       <span>Description <span class="required-marker" aria-hidden="true">*</span></span>
@@ -26,7 +26,7 @@
     }
     <div style="display: flex; justify-content: flex-end; gap: 0.5rem;">
       <p-button type="button" label="Cancel" severity="secondary" (onClick)="visible.set(false)" />
-      <p-button type="submit" label="Add part" [disabled]="form.invalid || isSaving()" />
+      <p-button type="submit" label="Add part" [disabled]="form.invalid || isSaving()" [loading]="isSaving()" />
     </div>
   </form>
 </p-dialog>
