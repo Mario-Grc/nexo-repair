@@ -1,21 +1,20 @@
 import { Component, DestroyRef, OnInit, computed, inject, signal } from '@angular/core';
 import { DatePipe, NgTemplateOutlet } from '@angular/common';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { FormBuilder, FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, debounceTime, distinctUntilChanged, filter, finalize, of, switchMap, tap } from 'rxjs';
 import { TableModule } from 'primeng/table';
 import { ButtonModule } from 'primeng/button';
-import { DialogModule } from 'primeng/dialog';
 import { DrawerModule } from 'primeng/drawer';
 import { PaginatorModule } from 'primeng/paginator';
 import { SkeletonModule } from 'primeng/skeleton';
 import { InputTextModule } from 'primeng/inputtext';
-import { TextareaModule } from 'primeng/textarea';
 import { SelectModule } from 'primeng/select';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { DatePickerModule } from 'primeng/datepicker';
 import { TagModule } from 'primeng/tag';
+import { TicketFormDialog } from './ticket-form-dialog';
 import { TicketService } from '../../../core/services/ticket.service';
 import { CustomerService } from '../../../core/services/customer.service';
 import { EmployeeService, type AssignableTechnician } from '../../../core/services/employee.service';
@@ -23,7 +22,6 @@ import { AuthService } from '../../../core/services/auth.service';
 import { ViewportService } from '../../../core/services/viewport.service';
 import { Customer } from '../../../core/models/customer';
 import { Ticket } from '../../../core/models/ticket';
-import { DEVICE_TYPE_OPTIONS } from '../../../core/models/device-type';
 import { TicketStatus, TICKET_STATUS_LABELS, TICKET_STATUS_SEVERITY, ALL_TICKET_STATUSES } from '../../../core/models/ticket-status';
 import {
   defaultFilters,
@@ -38,12 +36,10 @@ import {
   imports: [
     TableModule,
     ButtonModule,
-    DialogModule,
     DrawerModule,
     PaginatorModule,
     SkeletonModule,
     InputTextModule,
-    TextareaModule,
     SelectModule,
     MultiSelectModule,
     DatePickerModule,
@@ -53,6 +49,7 @@ import {
     DatePipe,
     RouterLink,
     NgTemplateOutlet,
+    TicketFormDialog,
   ],
   templateUrl: './ticket-list.html',
   styleUrl: './ticket-list.css',
@@ -65,7 +62,6 @@ export class TicketList implements OnInit {
   private customerService = inject(CustomerService);
   private employeeService = inject(EmployeeService);
   private auth = inject(AuthService);
-  private fb = inject(FormBuilder);
   viewport = inject(ViewportService);
 
   filters = signal<TicketFilters>(defaultFilters(null, null));
@@ -74,7 +70,6 @@ export class TicketList implements OnInit {
   loading = signal(false);
   loadError = signal<string | null>(null);
   hasLoaded = signal(false);
-  isSaving = signal(false);
   technicians = signal<AssignableTechnician[]>([]);
   customers = signal<Customer[]>([]);
   dialogVisible = signal(false);
@@ -117,20 +112,8 @@ export class TicketList implements OnInit {
 
   isFiltered = computed(() => this.activeFilterCount() > 0);
 
-  deviceTypeOptions = DEVICE_TYPE_OPTIONS;
   statusLabels = TICKET_STATUS_LABELS;
   statusSeverity = TICKET_STATUS_SEVERITY;
-
-  form = this.fb.nonNullable.group({
-    customerId: this.fb.control<number | null>(null, Validators.required),
-    problemDescription: ['', [Validators.required, Validators.maxLength(500)]],
-    device: this.fb.nonNullable.group({
-      type: ['OTHER' as const, Validators.required],
-      brand: [''],
-      model: [''],
-      identifier: [''],
-    }),
-  });
 
   ngOnInit(): void {
     this.employeeService
@@ -248,35 +231,11 @@ export class TicketList implements OnInit {
   }
 
   openNew(): void {
-    this.form.reset({
-      customerId: null,
-      problemDescription: '',
-      device: { type: 'OTHER', brand: '', model: '', identifier: '' },
-    });
     this.dialogVisible.set(true);
   }
 
-  save(): void {
-    if (this.form.invalid || this.isSaving()) return;
-    const customerId = this.form.controls.customerId.value;
-    if (customerId === null) return;
-
-    const raw = this.form.getRawValue();
-    this.isSaving.set(true);
-    this.ticketService
-      .createTicket({
-        customerId,
-        problemDescription: raw.problemDescription,
-        device: { ...raw.device, identifier: raw.device.identifier || null },
-      })
-      .subscribe({
-        next: () => {
-          this.isSaving.set(false);
-          this.dialogVisible.set(false);
-          this.retry();
-        },
-        error: () => this.isSaving.set(false),
-      });
+  onTicketCreated(): void {
+    this.retry();
   }
 
   shortId(publicId: string): string {

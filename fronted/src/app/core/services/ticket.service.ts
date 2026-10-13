@@ -47,7 +47,7 @@ export class TicketService {
   }
 
   createTicket(ticket: NewTicket): Observable<Ticket> {
-    return this.http.post<Ticket>(this.baseUrl, ticket);
+    return this.http.post<Ticket>(this.baseUrl, ticket, { context: silentContext() });
   }
 
   assignEmployee(publicId: string, dto: { employeeId: number | null }): Observable<Ticket> {

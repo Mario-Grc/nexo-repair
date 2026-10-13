@@ -167,35 +167,9 @@
   }
 }
 
-<p-dialog
-  header="New ticket"
+<app-ticket-form-dialog
   [visible]="dialogVisible()"
   (visibleChange)="dialogVisible.set($event)"
-  [modal]="true"
-  [style]="{ width: '480px' }"
-  styleClass="nexo-dialog"
->
-  <form [formGroup]="form" (ngSubmit)="save()" class="dialog-form">
-    <label>
-      <span>Customer <span class="required-marker" aria-hidden="true">*</span></span>
-      <p-select [options]="customers()" optionLabel="name" optionValue="id" formControlName="customerId" appendTo="body" [filter]="true" placeholder="Select a customer" required />
-    </label>
-
-    <div formGroupName="device" class="device-group">
-      <label>
-        <span>Device type <span class="required-marker" aria-hidden="true">*</span></span>
-        <p-select [options]="deviceTypeOptions" optionLabel="label" optionValue="value" formControlName="type" appendTo="body" required />
-      </label>
-      <label>Brand<input pInputText formControlName="brand" /></label>
-      <label>Model<input pInputText formControlName="model" /></label>
-      <label>Serial number / identifier<input pInputText formControlName="identifier" /></label>
-    </div>
-
-    <label>
-      <span>Problem description <span class="required-marker" aria-hidden="true">*</span></span>
-      <textarea pTextarea formControlName="problemDescription" rows="3" required maxlength="500"></textarea>
-    </label>
-
-    <p-button type="submit" label="Create ticket" [disabled]="form.invalid || isSaving()" [loading]="isSaving()" />
-  </form>
-</p-dialog>
+  [customers]="customers()"
+  (saved)="onTicketCreated()"
+/>
