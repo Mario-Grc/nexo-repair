@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { errorMessage } from './http-error.interceptor';
+import { errorMessage } from './http-error-message';
 
 describe('errorMessage', () => {
   it('reports no connection on status 0', () => {
