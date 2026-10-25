@@ -110,6 +110,7 @@ body {
 }
 
 .dialog-form textarea {
+  min-height: 6rem;
   resize: vertical;
 }
 
